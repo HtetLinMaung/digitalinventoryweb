@@ -326,6 +326,10 @@ main {
   max-width: 2rem;
 }
 
+.table tr {
+  transition: all 0.3s;
+}
+
 .table tr:hover {
   background-color: #fff2d4;
 }
@@ -344,6 +348,7 @@ tr:hover td {
 }
 
 .form-control {
+  font-family: var(--font-family);
   /* border: 2px solid #c4c4c4; */
   border-radius: 10px;
   /* background-color: #f6fafd; */
@@ -370,4 +375,7 @@ svg:active {
 .required-field,
 .required-field:focus {
   background-color: rgb(245, 245, 3);
+}
+.swal2-popup {
+  border-radius: 25px !important;
 }
