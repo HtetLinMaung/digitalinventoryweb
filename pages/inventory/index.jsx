@@ -31,6 +31,7 @@ const initPageState = {
   perpage: "50",
   search: "",
   sortby: "createddate",
+  reverse: "1",
 };
 
 const initState = {
@@ -43,6 +44,7 @@ export default function Inventory() {
   const router = useRouter();
   const [pagination, setPagination] = useData(initPageState);
   const [state, setState] = useData(initState);
+  const [rotate, setRotate] = useState("180deg");
 
   const fetchInventories = async () => {
     const query = buildQuery(pagination);
@@ -50,8 +52,8 @@ export default function Inventory() {
     Swal.fire({
       showConfirmButton: false,
       title: "Please Wait !",
-      html: `<div style="width: 5rem; height: 5rem;" class="spinner-border m-3 text-info" role="status">
-              <span class="visually-hidden">Loading...</span>
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+              <span className="visually-hidden">Loading...</span>
             </div>`,
       // add html attribute if you want or remove
       allowOutsideClick: false,
@@ -78,8 +80,9 @@ export default function Inventory() {
   };
 
   const skipPage = (i = 1) => {
+    console.log(i);
     const page = parseInt(pagination.page || "1");
-    const pagecount = parseInt(pagination.pagecount || "1");
+    const pagecount = parseInt(state.pagecount || "1");
     if ((page == 1 && i < 0) || (page == pagecount && i > 0)) {
       return;
     }
@@ -110,8 +113,8 @@ export default function Inventory() {
           Swal.fire({
             showConfirmButton: false,
             title: "Please Wait !",
-            html: `<div style="width: 5rem; height: 5rem;" class="spinner-border m-3 text-info" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                    <span className="visually-hidden">Loading...</span>
                   </div>`,
             // add html attribute if you want or remove
             allowOutsideClick: false,
@@ -151,7 +154,12 @@ export default function Inventory() {
 
   useEffect(() => {
     fetchInventories();
-  }, [pagination.page, pagination.perpage, pagination.sortby]);
+  }, [
+    pagination.page,
+    pagination.perpage,
+    pagination.sortby,
+    pagination.reverse,
+  ]);
 
   return (
     <div>
@@ -253,91 +261,288 @@ export default function Inventory() {
           <thead>
             <tr>
               <th scope="col">#</th>
-              <th scope="col">Ref.</th>
-              <th scope="col">Label</th>
-              <th scope="col">Inventory Code</th>
-              <th scope="col">Price</th>
-              <th scope="col">In Stock</th>
-              <th scope="col">Tags</th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "itemref";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Ref.
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "label";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Label
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "itemcode";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Inventory Code
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "price";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Price
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "counts";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                In Stock
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "tag";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Tags
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
               <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
-            {state.items.map((item, i) => (
-              <tr key={item.itemref}>
-                <th scope="row">{i + 1}</th>
-                <td>{item.itemref}</td>
-                <td>{item.label}</td>
-                <td>{item.itemcode}</td>
-                <td style={{ textAlign: "right" }}>
-                  {formatMoney(item.price)}
-                </td>
-                <td>{item.remaining}</td>
-                <td>
-                  {item.tag
-                    ? item.tag.split(",").map((t) => (
-                        <span
-                          key={t}
-                          className="badge rounded-pill bg-primary mx-1"
-                        >
-                          {t}
-                        </span>
-                      ))
-                    : ""}
-                </td>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-around",
-                      alignItems: "center",
-                    }}
-                  >
-                    <svg
-                      onClick={() => {
-                        localStorage.setItem("itemref", item.itemref);
-                        router.push("/inventory/form");
+            {state.items.length ? (
+              state.items.map((item, i) => (
+                <tr key={item.itemref}>
+                  <th scope="row">{i + 1}</th>
+                  <td>{item.itemref}</td>
+                  <td>{item.label}</td>
+                  <td>{item.itemcode}</td>
+                  <td style={{ textAlign: "right" }}>
+                    {formatMoney(item.price)}
+                  </td>
+                  <td>{item.remaining}</td>
+                  <td>
+                    {item.tag
+                      ? item.tag.split(",").map((t) => (
+                          <span
+                            key={t}
+                            className="badge rounded-pill bg-primary mx-1"
+                          >
+                            {t}
+                          </span>
+                        ))
+                      : ""}
+                  </td>
+                  <td>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-around",
+                        alignItems: "center",
                       }}
-                      style={{ width: "1rem" }}
-                      aria-hidden="true"
-                      focusable="false"
-                      data-prefix="fas"
-                      data-icon="pencil-alt"
-                      role="img"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 512 512"
-                      className="svg-inline--fa fa-pencil-alt fa-w-16 fa-3x"
                     >
-                      <path
-                        fill="currentColor"
-                        style={{ color: "grey" }}
-                        d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
-                        className=""
-                      ></path>
-                    </svg>
-                    <svg
-                      style={{ width: "1rem" }}
-                      aria-hidden="true"
-                      focusable="false"
-                      data-prefix="fas"
-                      data-icon="trash"
-                      role="img"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 448 512"
-                      className="svg-inline--fa fa-trash fa-w-14 fa-3x"
-                      onClick={confirmDelete.bind(this, item.itemref)}
-                    >
-                      <path
-                        style={{ color: "grey" }}
-                        fill="currentColor"
-                        d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
-                        className=""
-                      ></path>
-                    </svg>
-                  </div>
+                      <svg
+                        onClick={() => {
+                          localStorage.setItem("itemref", item.itemref);
+                          router.push("/inventory/form");
+                        }}
+                        style={{ width: "1rem" }}
+                        aria-hidden="true"
+                        focusable="false"
+                        data-prefix="fas"
+                        data-icon="pencil-alt"
+                        role="img"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 512 512"
+                        className="svg-inline--fa fa-pencil-alt fa-w-16 fa-3x"
+                      >
+                        <path
+                          fill="currentColor"
+                          style={{ color: "grey" }}
+                          d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
+                          className=""
+                        ></path>
+                      </svg>
+                      <svg
+                        style={{ width: "1rem" }}
+                        aria-hidden="true"
+                        focusable="false"
+                        data-prefix="fas"
+                        data-icon="trash"
+                        role="img"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 448 512"
+                        className="svg-inline--fa fa-trash fa-w-14 fa-3x"
+                        onClick={confirmDelete.bind(this, item.itemref)}
+                      >
+                        <path
+                          style={{ color: "grey" }}
+                          fill="currentColor"
+                          d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
+                          className=""
+                        ></path>
+                      </svg>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="8"
+                  style={{ textAlign: "center", fontWeight: "bold" }}
+                >
+                  No Data
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -353,10 +558,7 @@ export default function Inventory() {
               }}
             >
               <svg
-                onClick={skipPage.bind(
-                  this,
-                  pagination.page - pagination.page + 1
-                )}
+                onClick={() => setPagination({ page: 1 })}
                 style={{ width: "1.3rem" }}
                 aria-hidden="true"
                 focusable="false"
@@ -416,7 +618,7 @@ export default function Inventory() {
                 ></path>
               </svg>
               <svg
-                onClick={skipPage.bind(this, state.pagecount)}
+                onClick={() => setPagination({ page: state.pagecount })}
                 style={{ width: "1.3rem" }}
                 aria-hidden="true"
                 focusable="false"
@@ -442,7 +644,9 @@ export default function Inventory() {
             className="form-select form-control card"
             style={{ backgroundColor: "#fff" }}
             value={pagination.perpage}
-            onChange={(e) => setPagination({ perpage: e.target.value })}
+            onChange={(e) =>
+              setPagination({ perpage: e.target.value, page: "1" })
+            }
           >
             {pageOptions.map((option) => (
               <option key={option.value} value={option.value}>
