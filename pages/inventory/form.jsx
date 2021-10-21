@@ -5,6 +5,7 @@ import { formatMoney } from "../../utils/money";
 import rest from "../../utils/rest";
 import Swal from "sweetalert2";
 import { useRouter } from "next/router";
+import { showError } from "../../utils/alert";
 
 const initState = {
   itemref: "",
@@ -23,6 +24,14 @@ export default function InventoryForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [state, setState] = useData(initState);
+
+  const getRemaining = async (ref) => {
+    const [d, e] = await rest.get(`/inventory-activities/remainings/${ref}`);
+    if (e) {
+      showError(e);
+    }
+    return d.data.data;
+  };
 
   useEffect(() => {
     const itemref = localStorage.getItem("itemref");
@@ -56,11 +65,15 @@ export default function InventoryForm() {
     }
   }, []);
 
-  useEffect(() => {
-    setState({
-      remaining: state.counts,
-    });
-  }, [state.counts]);
+  // useEffect(() => {
+  //   const remaining = 0;
+  //   if (state.itemref) {
+  //     remaining = parseInt(getRemaining(state.itemref) || "0");
+  //   }
+  //   setState({
+  //     remaining: remaining + ,
+  //   });
+  // }, [state.counts]);
 
   const handleNew = () => {
     localStorage.setItem("itemref", "");
@@ -89,6 +102,9 @@ export default function InventoryForm() {
     if (itemref) {
       promise = rest.put(`/inventories/${itemref}`, body);
     } else {
+      if (body.hasOwnProperty("id")) {
+        delete body.id;
+      }
       promise = rest.post("/inventories", body);
     }
     const [data, error] = await promise;
@@ -113,9 +129,16 @@ export default function InventoryForm() {
       });
 
       if (!itemref) {
-        data.data.data.price = formatMoney(data.data.data.price);
-        setState(data.data.data);
+        const remaining = await getRemaining(data.data.data.itemref);
+        setState({
+          ...data.data.data,
+          price: formatMoney(data.data.data.price),
+          remaining,
+        });
         localStorage.setItem("itemref", data.data.data.itemref);
+      } else {
+        const remaining = await getRemaining(itemref);
+        setState({ remaining });
       }
     }
     setLoading(false);
@@ -199,7 +222,7 @@ export default function InventoryForm() {
             </Link>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
-            New
+            {state.itemref ? state.itemref : "New"}
           </li>
         </ol>
       </nav>

@@ -6,12 +6,8 @@ import rest from "../../utils/rest";
 import { buildQuery } from "../../utils/url-builder";
 import Swal from "sweetalert2";
 import { formatMoney } from "../../utils/money";
-
-const options = [
-  { value: "chocolate", label: "Chocolate" },
-  { value: "strawberry", label: "Strawberry" },
-  { value: "vanilla", label: "Vanilla" },
-];
+import { showError } from "../../utils/alert";
+import moment from "moment";
 
 const pageOptions = [
   { value: "10", label: "10" },
@@ -32,6 +28,7 @@ const initPageState = {
   search: "",
   sortby: "createddate",
   reverse: "1",
+  voidstatus: "1",
 };
 
 const initState = {
@@ -40,13 +37,13 @@ const initState = {
   items: [],
 };
 
-export default function Inventory() {
+export default function InventoryActivity() {
   const router = useRouter();
   const [pagination, setPagination] = useData(initPageState);
   const [state, setState] = useData(initState);
   const [rotate, setRotate] = useState("180deg");
 
-  const fetchInventories = async () => {
+  const fetchInvActivities = async () => {
     const query = buildQuery(pagination);
 
     Swal.fire({
@@ -61,15 +58,10 @@ export default function Inventory() {
         Swal.showLoading();
       },
     });
-    const [data, err] = await rest.get(`/inventories?${query}`);
+    const [data, err] = await rest.get(`/inventory-activities?${query}`);
     Swal.close();
     if (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: err.message,
-        footer: '<a href="">Why do I have this issue?</a>',
-      });
+      showError(err);
     } else {
       setState({
         items: data.data.data,
@@ -80,7 +72,6 @@ export default function Inventory() {
   };
 
   const skipPage = (i = 1) => {
-    console.log(i);
     const page = parseInt(pagination.page || "1");
     const pagecount = parseInt(state.pagecount || "1");
     if ((page == 1 && i < 0) || (page == pagecount && i > 0)) {
@@ -89,77 +80,38 @@ export default function Inventory() {
     setPagination({ page: page + i });
   };
 
-  const confirmDelete = (itemref) => {
-    const swalWithBootstrapButtons = Swal.mixin({
-      customClass: {
-        confirmButton: "btn btn-success mx-2",
-        cancelButton: "btn btn-danger mx-2",
-      },
-      buttonsStyling: false,
-    });
-
-    swalWithBootstrapButtons
-      .fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel!",
-        reverseButtons: true,
-      })
-      .then((result) => {
-        if (result.isConfirmed) {
-          Swal.fire({
-            showConfirmButton: false,
-            title: "Please Wait !",
-            html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>`,
-            // add html attribute if you want or remove
-            allowOutsideClick: false,
-            onBeforeOpen: () => {
-              Swal.showLoading();
-            },
-          });
-          rest.delete(`/inventories/${itemref}`).then(([data, err]) => {
-            Swal.close();
-            if (err) {
-              Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                text: err.message,
-                footer: '<a href="">Why do I have this issue?</a>',
-              });
-            } else {
-              swalWithBootstrapButtons
-                .fire("Deleted!", "Your data has been deleted.", "success")
-                .then(() => {
-                  fetchInventories();
-                });
-            }
-          });
-        } else if (
-          /* Read more about handling dismissals below */
-          result.dismiss === Swal.DismissReason.cancel
-        ) {
-          swalWithBootstrapButtons.fire(
-            "Cancelled",
-            "Your data is safe :)",
-            "error"
-          );
-        }
-      });
-  };
-
   useEffect(() => {
-    fetchInventories();
+    fetchInvActivities();
   }, [
     pagination.page,
     pagination.perpage,
     pagination.sortby,
     pagination.reverse,
+    pagination.voidstatus,
   ]);
+
+  const StatusBadge = ({ invstatus }) => {
+    switch (invstatus) {
+      case "out":
+        return (
+          <span className="badge rounded-pill bg-success mx-1">
+            {invstatus.toUpperCase()}
+          </span>
+        );
+      case "in":
+        return (
+          <span className="badge rounded-pill bg-success mx-1">
+            {invstatus.toUpperCase()}
+          </span>
+        );
+      case "reject":
+        return (
+          <span className="badge rounded-pill bg-danger mx-1">
+            {invstatus.toUpperCase()}
+          </span>
+        );
+    }
+  };
 
   return (
     <div>
@@ -171,7 +123,7 @@ export default function Inventory() {
       >
         <ol className="breadcrumb">
           <li className="breadcrumb-item active" aria-current="page">
-            Inventory
+            Inventory In/Out
           </li>
         </ol>
       </nav>
@@ -206,7 +158,7 @@ export default function Inventory() {
               onChange={(e) => setPagination({ search: e.target.value })}
               onKeyPress={(e) => {
                 if (e.key == "Enter") {
-                  fetchInventories();
+                  fetchInvActivities();
                 }
               }}
             />
@@ -220,7 +172,7 @@ export default function Inventory() {
               }}
             >
               <svg
-                onClick={fetchInventories}
+                onClick={fetchInvActivities}
                 style={{ width: "1rem" }}
                 aria-hidden="true"
                 focusable="false"
@@ -241,8 +193,20 @@ export default function Inventory() {
             </span>
           </div>
         </div>
+        <div className="col-xl-1">
+          <select
+            style={{ backgroundColor: "#fff" }}
+            className="form-select form-control card"
+            value={pagination.voidstatus}
+            onChange={(e) => setPagination({ voidstatus: e.target.value })}
+          >
+            <option value="2">All</option>
+            <option value="1">Active</option>
+            <option value="0">Void</option>
+          </select>
+        </div>
 
-        <div className="col-xxl-8 col-xl-6">
+        <div className="col-xxl-8 col-xl-5">
           {/* <Select options={options} /> */}
         </div>
 
@@ -258,11 +222,11 @@ export default function Inventory() {
           <button
             className="btn btn-primary"
             onClick={() => {
-              localStorage.setItem("itemref", "");
-              router.push("/inventory/form");
+              localStorage.setItem("activityref", "");
+              router.push("/inventory-activity/form");
             }}
           >
-            New Inventory
+            New In/Out
           </button>
         </div>
       </div>
@@ -275,7 +239,7 @@ export default function Inventory() {
               <th
                 scope="col"
                 onClick={() => {
-                  const sortby = "itemref";
+                  const sortby = "activityref";
                   if (pagination.reverse == "1") {
                     setRotate("0deg");
                     setPagination({ sortby, reverse: "0" });
@@ -336,7 +300,7 @@ export default function Inventory() {
                   ></path>
                 </svg>
               </th>
-              <th
+              {/* <th
                 scope="col"
                 onClick={() => {
                   const sortby = "itemcode";
@@ -350,6 +314,38 @@ export default function Inventory() {
                 }}
               >
                 Inventory Code
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th> */}
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "qty";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Qty
                 <svg
                   style={{ transform: `rotate(${rotate})` }}
                   aria-hidden="true"
@@ -403,7 +399,7 @@ export default function Inventory() {
               <th
                 scope="col"
                 onClick={() => {
-                  const sortby = "counts";
+                  const sortby = "amount";
                   if (pagination.reverse == "1") {
                     setRotate("0deg");
                     setPagination({ sortby, reverse: "0" });
@@ -413,7 +409,7 @@ export default function Inventory() {
                   }
                 }}
               >
-                In Stock
+                Amount
                 <svg
                   style={{ transform: `rotate(${rotate})` }}
                   aria-hidden="true"
@@ -435,7 +431,7 @@ export default function Inventory() {
               <th
                 scope="col"
                 onClick={() => {
-                  const sortby = "tag";
+                  const sortby = "vouchercode";
                   if (pagination.reverse == "1") {
                     setRotate("0deg");
                     setPagination({ sortby, reverse: "0" });
@@ -445,7 +441,7 @@ export default function Inventory() {
                   }
                 }}
               >
-                Tags
+                Voucher
                 <svg
                   style={{ transform: `rotate(${rotate})` }}
                   aria-hidden="true"
@@ -464,90 +460,144 @@ export default function Inventory() {
                   ></path>
                 </svg>
               </th>
-              <th scope="col"></th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "customername";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Customer
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "date";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Date
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
+              <th
+                scope="col"
+                onClick={() => {
+                  const sortby = "invstatus";
+                  if (pagination.reverse == "1") {
+                    setRotate("0deg");
+                    setPagination({ sortby, reverse: "0" });
+                  } else {
+                    setRotate("180deg");
+                    setPagination({ sortby, reverse: "1" });
+                  }
+                }}
+              >
+                Status
+                <svg
+                  style={{ transform: `rotate(${rotate})` }}
+                  aria-hidden="true"
+                  focusable="false"
+                  data-prefix="fal"
+                  data-icon="arrow-down"
+                  role="img"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                    className=""
+                  ></path>
+                </svg>
+              </th>
             </tr>
           </thead>
           <tbody>
             {state.items.length ? (
               state.items.map((item, i) => (
-                <tr key={item.itemref}>
+                <tr
+                  key={item.activityref}
+                  className={item.voidstatus == 0 ? "void-row" : ""}
+                >
                   <th scope="row">{i + 1}</th>
-                  <td>{item.itemref}</td>
+                  <td>
+                    <span
+                      onClick={() => {
+                        localStorage.setItem("activityref", item.activityref);
+                        router.push("/inventory-activity/form");
+                      }}
+                      style={{ textDecoration: "underline", cursor: "pointer" }}
+                    >
+                      {item.activityref}
+                    </span>
+                  </td>
                   <td>{item.label}</td>
-                  <td>{item.itemcode}</td>
+                  {/* <td>{item.itemcode}</td> */}
+                  <td>{item.qty}</td>
                   <td style={{ textAlign: "right" }}>
                     {formatMoney(item.price)}
                   </td>
-                  <td>{item.remaining}</td>
-                  <td>
-                    {item.tag
-                      ? item.tag.split(",").map((t) => (
-                          <span
-                            key={t}
-                            className="badge rounded-pill bg-primary mx-1"
-                          >
-                            {t}
-                          </span>
-                        ))
-                      : ""}
+                  <td style={{ textAlign: "right" }}>
+                    {formatMoney(item.amount)}
                   </td>
+                  <td>{item.vouchercode}</td>
+                  <td>{item.customername}</td>
+                  <td>{moment(item.date).format("DD/MM/YYYY")}</td>
                   <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-around",
-                        alignItems: "center",
-                      }}
-                    >
-                      <svg
-                        onClick={() => {
-                          localStorage.setItem("itemref", item.itemref);
-                          router.push("/inventory/form");
-                        }}
-                        style={{ width: "1rem" }}
-                        aria-hidden="true"
-                        focusable="false"
-                        data-prefix="fas"
-                        data-icon="pencil-alt"
-                        role="img"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 512 512"
-                        className="svg-inline--fa fa-pencil-alt fa-w-16 fa-3x"
-                      >
-                        <path
-                          fill="currentColor"
-                          style={{ color: "grey" }}
-                          d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"
-                          className=""
-                        ></path>
-                      </svg>
-                      <svg
-                        style={{ width: "1rem" }}
-                        aria-hidden="true"
-                        focusable="false"
-                        data-prefix="fas"
-                        data-icon="trash"
-                        role="img"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 448 512"
-                        className="svg-inline--fa fa-trash fa-w-14 fa-3x"
-                        onClick={confirmDelete.bind(this, item.itemref)}
-                      >
-                        <path
-                          style={{ color: "grey" }}
-                          fill="currentColor"
-                          d="M432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16zM53.2 467a48 48 0 0 0 47.9 45h245.8a48 48 0 0 0 47.9-45L416 128H32z"
-                          className=""
-                        ></path>
-                      </svg>
-                    </div>
+                    <StatusBadge invstatus={item.invstatus} />
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="10"
                   style={{ textAlign: "center", fontWeight: "bold" }}
                 >
                   No Data
