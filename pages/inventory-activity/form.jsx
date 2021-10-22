@@ -426,7 +426,7 @@ export default function InventoryActivityForm() {
                 id="datePicker-1"
                 value={state.date}
                 onChange={(value) => setState({ date: value })}
-                formatStyle="large"
+                formatStyle="medium"
                 locale={local.name}
               />
             </div>
@@ -435,22 +435,7 @@ export default function InventoryActivityForm() {
           <div className="row mb-3">
             <div className="col-xl-3">
               <label className="form-label">Inventory</label>
-              {/* <Select
-                inputValue={state.label}
-                options={inventories}
-                onInputChange={(v) => {
-                  setState({ label: v });
-                }}
-                onChange={(inv) => {
-                  setRemaining(inv.remaining + "");
-                  setState({
-                    label: inv.label,
-                    itemref: inv.itemref,
-                    itemcode: inv.itemcode,
-                    price: formatMoney(inv.price),
-                  });
-                }}
-              /> */}
+
               <Select
                 isDisabled={state.activityref}
                 value={selectdata}
@@ -493,7 +478,7 @@ export default function InventoryActivityForm() {
               <input
                 value={state.price}
                 type="text"
-                readOnly
+                readOnly={state.invstatus != "in"}
                 className="form-control price-control"
                 onChange={(e) =>
                   setState({ price: e.target.value.replace(/[a-zA-Z]/g, "") })
@@ -581,26 +566,30 @@ export default function InventoryActivityForm() {
               />
             </div>
           </div>
-          <div className="row mb-3">
-            <div className="col-xl-3">
-              <label className="form-label">Voucher Code</label>
-              <input
-                type="text"
-                className="form-control"
-                value={state.vouchercode}
-                onChange={(e) => setState({ vouchercode: e.target.value })}
-              />
+          {state.invstatus == "out" ? (
+            <div className="row mb-3">
+              <div className="col-xl-3">
+                <label className="form-label">Voucher Code</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={state.vouchercode}
+                  onChange={(e) => setState({ vouchercode: e.target.value })}
+                />
+              </div>
+              <div className="col-xl-3">
+                <label className="form-label">Customer Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={state.customername}
+                  onChange={(e) => setState({ customername: e.target.value })}
+                />
+              </div>
             </div>
-            <div className="col-xl-3">
-              <label className="form-label">Customer Name</label>
-              <input
-                type="text"
-                className="form-control"
-                value={state.customername}
-                onChange={(e) => setState({ customername: e.target.value })}
-              />
-            </div>
-          </div>
+          ) : (
+            ""
+          )}
           <div className="row mb-3">
             <div className="col-xl-5">
               <label className="form-label">Remark</label>

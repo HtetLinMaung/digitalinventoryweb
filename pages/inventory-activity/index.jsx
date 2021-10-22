@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import { formatMoney } from "../../utils/money";
 import { showError } from "../../utils/alert";
 import moment from "moment";
+import { DatePicker } from "react-rainbow-components";
 
 const pageOptions = [
   { value: "10", label: "10" },
@@ -29,6 +30,8 @@ const initPageState = {
   sortby: "createddate",
   reverse: "1",
   voidstatus: "1",
+  fromdate: moment().subtract(1, "months"),
+  todate: new Date(),
 };
 
 const initState = {
@@ -42,9 +45,20 @@ export default function InventoryActivity() {
   const [pagination, setPagination] = useData(initPageState);
   const [state, setState] = useData(initState);
   const [rotate, setRotate] = useState("180deg");
+  const [local, setLocal] = useState({ name: "en-US", label: "English (US)" });
 
   const fetchInvActivities = async () => {
-    const query = buildQuery(pagination);
+    const query = buildQuery({
+      ...pagination,
+      fromdate: pagination.fromdate
+        ? moment(pagination.fromdate).format("YYYY-MM-DD") + "T00:00"
+        : null,
+      todate: pagination.todate
+        ? moment(pagination.todate).format("YYYY-MM-DD") + "T23:00"
+        : null,
+      //   fromdate: pagination.fromdate ? pagination.fromdate.toISOString() : null,
+      //   todate: pagination.todate ? pagination.todate.toISOString() : null,
+    });
 
     Swal.fire({
       showConfirmButton: false,
@@ -88,6 +102,8 @@ export default function InventoryActivity() {
     pagination.sortby,
     pagination.reverse,
     pagination.voidstatus,
+    pagination.fromdate,
+    pagination.todate,
   ]);
 
   const StatusBadge = ({ invstatus }) => {
@@ -100,7 +116,7 @@ export default function InventoryActivity() {
         );
       case "in":
         return (
-          <span className="badge rounded-pill bg-success mx-1">
+          <span className="badge rounded-pill bg-primary mx-1">
             {invstatus.toUpperCase()}
           </span>
         );
@@ -206,9 +222,29 @@ export default function InventoryActivity() {
           </select>
         </div>
 
-        <div className="col-xxl-8 col-xl-5">
-          {/* <Select options={options} /> */}
+        <div className="col-xxl-8 col-xl-2">
+          <DatePicker
+            id="datePicker-1"
+            placeholder="From"
+            value={pagination.fromdate}
+            onChange={(value) => setPagination({ fromdate: value })}
+            formatStyle="medium"
+            locale={local.name}
+          />
         </div>
+
+        <div className="col-xxl-8 col-xl-2">
+          <DatePicker
+            placeholder="To"
+            id="datePicker-1"
+            value={pagination.todate}
+            onChange={(value) => setPagination({ todate: value })}
+            formatStyle="medium"
+            locale={local.name}
+          />
+        </div>
+
+        <div className="col-xl-1"></div>
 
         <div
           className="col-xl-3 col-xxl-2"
