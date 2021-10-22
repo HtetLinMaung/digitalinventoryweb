@@ -32,6 +32,7 @@ const initPageState = {
   voidstatus: "1",
   fromdate: moment().subtract(1, "months"),
   todate: new Date(),
+  invstatus: "all",
 };
 
 const initState = {
@@ -44,8 +45,46 @@ export default function InventoryActivity() {
   const router = useRouter();
   const [pagination, setPagination] = useData(initPageState);
   const [state, setState] = useData(initState);
+  const [totalState, setTotalState] = useData({
+    totalqty: "0",
+    totalamount: "0.00",
+  });
   const [rotate, setRotate] = useState("180deg");
   const [local, setLocal] = useState({ name: "en-US", label: "English (US)" });
+
+  const fetchInvActivitiesTotal = async () => {
+    const query = buildQuery({
+      ...pagination,
+      fromdate: pagination.fromdate
+        ? moment(pagination.fromdate).format("YYYY-MM-DD") + "T00:00"
+        : null,
+      todate: pagination.todate
+        ? moment(pagination.todate).format("YYYY-MM-DD") + "T23:00"
+        : null,
+    });
+    Swal.fire({
+      showConfirmButton: false,
+      title: "Please Wait !",
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>`,
+      // add html attribute if you want or remove
+      allowOutsideClick: false,
+      onBeforeOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const [data, err] = await rest.get(`/inventory-activities/totals?${query}`);
+    Swal.close();
+    if (err) {
+      showError(err);
+    } else {
+      setTotalState({
+        totalqty: data.data.data.totalqty + "",
+        totalamount: formatMoney(data.data.data.totalamount),
+      });
+    }
+  };
 
   const fetchInvActivities = async () => {
     const query = buildQuery({
@@ -56,8 +95,6 @@ export default function InventoryActivity() {
       todate: pagination.todate
         ? moment(pagination.todate).format("YYYY-MM-DD") + "T23:00"
         : null,
-      //   fromdate: pagination.fromdate ? pagination.fromdate.toISOString() : null,
-      //   todate: pagination.todate ? pagination.todate.toISOString() : null,
     });
 
     Swal.fire({
@@ -96,6 +133,7 @@ export default function InventoryActivity() {
 
   useEffect(() => {
     fetchInvActivities();
+    fetchInvActivitiesTotal();
   }, [
     pagination.page,
     pagination.perpage,
@@ -104,6 +142,7 @@ export default function InventoryActivity() {
     pagination.voidstatus,
     pagination.fromdate,
     pagination.todate,
+    pagination.invstatus,
   ]);
 
   const StatusBadge = ({ invstatus }) => {
@@ -150,8 +189,60 @@ export default function InventoryActivity() {
       >
         <div>
           <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+            Qty - {totalState.totalqty}
+          </span>
+        </div>
+        <div style={{ marginLeft: "3rem" }}>
+          <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
+            Amount - {totalState.totalamount}
+          </span>
+        </div>
+        <div style={{ marginLeft: "3rem" }}>
+          <span style={{ fontSize: "1.2rem", fontWeight: "bold" }}>
             Total - {state.total}
           </span>
+        </div>
+      </div>
+
+      <div className="row mb-4">
+        <div className="col-xxl-2 col-xl-3"></div>
+        <div className="col-xl-1">
+          {/* <select
+            style={{ backgroundColor: "#fff" }}
+            className="form-select form-control card"
+            value={pagination.voidstatus}
+            onChange={(e) => setPagination({ voidstatus: e.target.value })}
+          >
+            <option value="2">All</option>
+            <option value="1">Active</option>
+            <option value="0">Void</option>
+          </select> */}
+        </div>
+
+        <div className="col-xxl-8 col-xl-2"></div>
+
+        <div className="col-xxl-8 col-xl-2"></div>
+
+        <div className="col-xl-1"></div>
+
+        <div
+          className="col-xl-3 col-xxl-2"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <button className="btn">Import</button>
+          <button className="btn">Export</button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              localStorage.setItem("activityref", "");
+              router.push("/inventory-activity/form");
+            }}
+          >
+            New In/Out
+          </button>
         </div>
       </div>
 
@@ -171,7 +262,9 @@ export default function InventoryActivity() {
               aria-describedby="basic-addon1"
               style={{ borderRightStyle: "none", border: 0 }}
               value={pagination.search}
-              onChange={(e) => setPagination({ search: e.target.value })}
+              onChange={(e) =>
+                setPagination({ search: e.target.value, page: "1" })
+              }
               onKeyPress={(e) => {
                 if (e.key == "Enter") {
                   fetchInvActivities();
@@ -209,12 +302,29 @@ export default function InventoryActivity() {
             </span>
           </div>
         </div>
-        <div className="col-xl-1">
+        <div className="col-xl-2">
+          <select
+            style={{ backgroundColor: "#fff" }}
+            value={pagination.invstatus}
+            onChange={(e) =>
+              setPagination({ invstatus: e.target.value, page: "1" })
+            }
+            className="form-select form-control card"
+          >
+            <option value="in">In</option>
+            <option value="out">Out</option>
+            <option value="reject">Reject</option>
+            <option value="all">Status</option>
+          </select>
+        </div>
+        <div className="col-xl-2">
           <select
             style={{ backgroundColor: "#fff" }}
             className="form-select form-control card"
             value={pagination.voidstatus}
-            onChange={(e) => setPagination({ voidstatus: e.target.value })}
+            onChange={(e) =>
+              setPagination({ voidstatus: e.target.value, page: "1" })
+            }
           >
             <option value="2">All</option>
             <option value="1">Active</option>
@@ -227,7 +337,7 @@ export default function InventoryActivity() {
             id="datePicker-1"
             placeholder="From"
             value={pagination.fromdate}
-            onChange={(value) => setPagination({ fromdate: value })}
+            onChange={(value) => setPagination({ fromdate: value, page: "1" })}
             formatStyle="medium"
             locale={local.name}
           />
@@ -238,31 +348,43 @@ export default function InventoryActivity() {
             placeholder="To"
             id="datePicker-1"
             value={pagination.todate}
-            onChange={(value) => setPagination({ todate: value })}
+            onChange={(value) => setPagination({ todate: value, page: "1" })}
             formatStyle="medium"
             locale={local.name}
           />
         </div>
 
-        <div className="col-xl-1"></div>
-
-        <div
-          className="col-xl-3 col-xxl-2"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <button className="btn">Import</button>
-          <button className="btn">Export</button>
+        <div className="col-xl-1 col-xxl-2">
           <button
-            className="btn btn-primary"
-            onClick={() => {
-              localStorage.setItem("activityref", "");
-              router.push("/inventory-activity/form");
+            className="btn"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              width: 33,
+              height: 33,
+              borderRadius: "50%",
+              padding: 0,
             }}
+            onClick={() => setPagination(initPageState)}
           >
-            New In/Out
+            <svg
+              style={{ width: "1rem" }}
+              aria-hidden="true"
+              focusable="false"
+              data-prefix="fas"
+              data-icon="redo-alt"
+              role="img"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 512 512"
+              className="svg-inline--fa fa-redo-alt fa-w-16 fa-3x __svg"
+            >
+              <path
+                fill="currentColor"
+                d="M256.455 8c66.269.119 126.437 26.233 170.859 68.685l35.715-35.715C478.149 25.851 504 36.559 504 57.941V192c0 13.255-10.745 24-24 24H345.941c-21.382 0-32.09-25.851-16.971-40.971l41.75-41.75c-30.864-28.899-70.801-44.907-113.23-45.273-92.398-.798-170.283 73.977-169.484 169.442C88.764 348.009 162.184 424 256 424c41.127 0 79.997-14.678 110.629-41.556 4.743-4.161 11.906-3.908 16.368.553l39.662 39.662c4.872 4.872 4.631 12.815-.482 17.433C378.202 479.813 319.926 504 256 504 119.034 504 8.001 392.967 8 256.002 7.999 119.193 119.646 7.755 256.455 8z"
+                class=""
+              ></path>
+            </svg>
           </button>
         </div>
       </div>
@@ -336,38 +458,6 @@ export default function InventoryActivity() {
                   ></path>
                 </svg>
               </th>
-              {/* <th
-                scope="col"
-                onClick={() => {
-                  const sortby = "itemcode";
-                  if (pagination.reverse == "1") {
-                    setRotate("0deg");
-                    setPagination({ sortby, reverse: "0" });
-                  } else {
-                    setRotate("180deg");
-                    setPagination({ sortby, reverse: "1" });
-                  }
-                }}
-              >
-                Inventory Code
-                <svg
-                  style={{ transform: `rotate(${rotate})` }}
-                  aria-hidden="true"
-                  focusable="false"
-                  data-prefix="fal"
-                  data-icon="arrow-down"
-                  role="img"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 448 512"
-                  className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
-                >
-                  <path
-                    fill="currentColor"
-                    d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
-                    className=""
-                  ></path>
-                </svg>
-              </th> */}
               <th
                 scope="col"
                 onClick={() => {

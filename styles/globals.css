@@ -401,3 +401,12 @@ thead th:hover .sort-icon {
 .void-row th {
   background-color: rgb(211, 126, 126) !important;
 }
+
+.form-control {
+  font-family: var(--font-family);
+  font-size: 12px;
+}
+
+.__svg:hover {
+  transform: none;
+}
