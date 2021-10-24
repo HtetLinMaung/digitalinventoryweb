@@ -1,5 +1,6 @@
 import { useRouter } from "next/router";
 import Swal from "sweetalert2";
+import checkToken from "../../commons/check-token";
 import { useData } from "../../hooks/custom-hooks";
 import { showError } from "../../utils/alert";
 import iam from "../../utils/iam-rest";
@@ -37,7 +38,7 @@ export default function Login() {
     } else {
       if (data.data.token) {
         localStorage.setItem("iamtoken", data.data.token);
-        // get btoken with atoken
+        await checkToken();
         router.push("/");
       } else {
         localStorage.setItem("otpsession", data.data.otpsession);

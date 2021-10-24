@@ -1,6 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import checkToken from "../../commons/check-token";
 import { showError } from "../../utils/alert";
 import iam from "../../utils/iam-rest";
 
@@ -33,6 +34,7 @@ export default function Otp() {
   }, []);
 
   const resendOtp = async () => {
+    setOtpcode("");
     const [data, err] = await iam.post("/auth/resend-otp", {
       otpsession: localStorage.getItem("otpsession") || "",
       appid: "digitalinventory",
@@ -82,7 +84,7 @@ export default function Otp() {
     } else {
       clearInterval(intervalid);
       localStorage.setItem("iamtoken", data.data.token);
-      // get btoken
+      await checkToken();
       router.push("/");
     }
   };
