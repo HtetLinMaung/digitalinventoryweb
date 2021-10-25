@@ -1,9 +1,10 @@
 import Swal from "sweetalert2";
 
-export const showError = (e) =>
+export const showError = (e) => {
   Swal.fire({
     icon: "error",
     title: "Oops...",
-    text: e.message,
+    text: e.response.data.message,
     footer: '<a href="">Why do I have this issue?</a>',
   });
+};

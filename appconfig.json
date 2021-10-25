@@ -1,4 +1,5 @@
 {
     "domain": "http://localhost/api/v1",
-    "iam": "http://localhost/iam"
+    "iam": "http://localhost/iam",
+    "version": "Digital Inventory (1.0.0)"
 }

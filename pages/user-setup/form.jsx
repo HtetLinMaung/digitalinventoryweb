@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useData } from "../../hooks/custom-hooks";
-import { formatMoney } from "../../utils/money";
-import rest from "../../utils/rest";
 import Swal from "sweetalert2";
 import { useRouter } from "next/router";
 import { showError } from "../../utils/alert";
+import iam from "../../utils/iam-rest";
+import Head from "next/head";
+import config from "../../appconfig.json";
 
 const initState = {
   userid: "",
@@ -15,29 +16,40 @@ const initState = {
   mobile: "",
   contactinfo: "",
   contactperson: "",
+  otpservice: "email",
+  role: "normaluser",
+  accountstatus: "active",
+  profile: "",
+  password: "",
 };
 
 export default function UserSetupForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [state, setState] = useData(initState);
-
-  const getRemaining = async (ref) => {
-    const [d, e] = await rest.get(`/inventory-activities/remainings/${ref}`);
-    if (e) {
-      showError(e);
-    }
-    return d.data.data;
-  };
+  const [userRole, setUserRole] = useState("admin");
+  const [isupdate, setIsupdate] = useState("");
 
   useEffect(() => {
-    const itemref = localStorage.getItem("itemref");
-    if (itemref) {
+    const role = localStorage.getItem("role");
+    setUserRole(role);
+    if (role == "superadmin") {
+      setState({ password: "User@123" });
+    } else if (role == "admin") {
+      setState({
+        companyid: "abc",
+        companyname: localStorage.getItem("companyname"),
+      });
+    }
+    const userid = localStorage.getItem("userid");
+    const isupdate = localStorage.getItem("isupdate");
+    setIsupdate(isupdate);
+    if (isupdate && userid) {
       Swal.fire({
         showConfirmButton: false,
         title: "Please Wait !",
-        html: `<div style="width: 5rem; height: 5rem;" class="spinner-border m-3 text-info" role="status">
-                <span class="visually-hidden">Loading...</span>
+        html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                <span className="visually-hidden">Loading...</span>
               </div>`,
         // add html attribute if you want or remove
         allowOutsideClick: false,
@@ -45,36 +57,33 @@ export default function UserSetupForm() {
           Swal.showLoading();
         },
       });
-      rest.get(`/inventories/${itemref}`).then(([data, err]) => {
+      iam.get(`/auth/users/${userid}`).then(([data, err]) => {
         Swal.close();
         if (err) {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: err.message,
-            footer: '<a href="">Why do I have this issue?</a>',
-          });
+          showError(err);
         } else {
-          data.data.data.price = formatMoney(data.data.data.price);
+          if (data.data.data.hasOwnProperty("_id")) {
+            delete data.data.data["_id"];
+            delete data.data.data["__v"];
+            delete data.data.data["createdAt"];
+            delete data.data.data["updatedAt"];
+          }
           setState(data.data.data);
         }
       });
     }
   }, []);
 
-  // useEffect(() => {
-  //   const remaining = 0;
-  //   if (state.itemref) {
-  //     remaining = parseInt(getRemaining(state.itemref) || "0");
-  //   }
-  //   setState({
-  //     remaining: remaining + ,
-  //   });
-  // }, [state.counts]);
-
   const handleNew = () => {
-    localStorage.setItem("itemref", "");
-    setState(initState);
+    localStorage.setItem("userid", "");
+    localStorage.setItem("isupdate", "");
+    setIsupdate("");
+    const newState = { ...initState };
+    if (userRole == "admin") {
+      newState.companyid = "abc";
+      newState.companyname = localStorage.getItem("companyname");
+    }
+    setState(newState);
   };
 
   const handleSave = async () => {
@@ -83,8 +92,8 @@ export default function UserSetupForm() {
     Swal.fire({
       showConfirmButton: false,
       title: "Please Wait !",
-      html: `<div style="width: 5rem; height: 5rem;" class="spinner-border m-3 text-info" role="status">
-          <span class="visually-hidden">Loading...</span>
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+          <span className="visually-hidden">Loading...</span>
         </div>`,
       // add html attribute if you want or remove
       allowOutsideClick: false,
@@ -92,17 +101,16 @@ export default function UserSetupForm() {
         Swal.showLoading();
       },
     });
-    console.log(state);
-    const body = { ...state, price: state.price.replaceAll(",", "") };
+
+    const body = { ...state };
     let promise;
-    const itemref = localStorage.getItem("itemref");
-    if (itemref) {
-      promise = rest.put(`/inventories/${itemref}`, body);
-    } else {
-      if (body.hasOwnProperty("id")) {
-        delete body.id;
-      }
-      promise = rest.post("/inventories", body);
+    const userid = localStorage.getItem("userid");
+    const isupdate = localStorage.getItem("isupdate");
+    setIsupdate(isupdate);
+    if (isupdate && userid) {
+      promise = iam.put(`/auth/users/${userid}`, body);
+    } else if (!isupdate) {
+      promise = iam.post("/auth/users", body);
     }
     const [data, error] = await promise;
     if (error) {
@@ -113,8 +121,7 @@ export default function UserSetupForm() {
         text: error.message,
         footer: '<a href="">Why do I have this issue?</a>',
       });
-    }
-    if (data) {
+    } else {
       Swal.close();
       console.log(data);
       Swal.fire({
@@ -125,23 +132,17 @@ export default function UserSetupForm() {
         timer: 5000,
       });
 
-      if (!itemref) {
-        const remaining = await getRemaining(data.data.data.itemref);
+      if (!isupdate) {
         setState({
           ...data.data.data,
-          price: formatMoney(data.data.data.price),
-          remaining,
         });
-        localStorage.setItem("itemref", data.data.data.itemref);
-      } else {
-        const remaining = await getRemaining(itemref);
-        setState({ remaining });
+        localStorage.setItem("userid", data.data.data.userid);
       }
     }
     setLoading(false);
   };
 
-  const confirmDelete = (itemref) => {
+  const confirmDelete = (userid) => {
     const swalWithBootstrapButtons = Swal.mixin({
       customClass: {
         confirmButton: "btn btn-success mx-2",
@@ -165,8 +166,8 @@ export default function UserSetupForm() {
           Swal.fire({
             showConfirmButton: false,
             title: "Please Wait !",
-            html: `<div style="width: 5rem; height: 5rem;" class="spinner-border m-3 text-info" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                    <span className="visually-hidden">Loading...</span>
                   </div>`,
             // add html attribute if you want or remove
             allowOutsideClick: false,
@@ -174,20 +175,15 @@ export default function UserSetupForm() {
               Swal.showLoading();
             },
           });
-          rest.delete(`/inventories/${itemref}`).then(([data, err]) => {
+          iam.delete(`/auth/users/${userid}`).then(([data, err]) => {
             Swal.close();
             if (err) {
-              Swal.fire({
-                icon: "error",
-                title: "Oops...",
-                text: err.message,
-                footer: '<a href="">Why do I have this issue?</a>',
-              });
+              showError(err);
             } else {
               swalWithBootstrapButtons
                 .fire("Deleted!", "Your data has been deleted.", "success")
                 .then(() => {
-                  router.push("/inventory");
+                  router.push("/user-setup");
                 });
             }
           });
@@ -206,6 +202,11 @@ export default function UserSetupForm() {
 
   return (
     <div>
+      <Head>
+        <title>{config.version}</title>
+        <meta name="description" content="Generated by create next app" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <nav
         style={{
           "--bs-breadcrumb-divider": "'>'",
@@ -213,13 +214,13 @@ export default function UserSetupForm() {
         aria-label="breadcrumb"
       >
         <ol className="breadcrumb">
-          <li class="breadcrumb-item">
+          <li className="breadcrumb-item">
             <Link href="/user-setup">
               <a>User Setup</a>
             </Link>
           </li>
           <li className="breadcrumb-item active" aria-current="page">
-            {state.itemref ? state.itemref : "New"}
+            {isupdate ? state.userid : "New"}
           </li>
         </ol>
       </nav>
@@ -236,15 +237,20 @@ export default function UserSetupForm() {
                 New
               </button>
               <button
-                disabled={!state.label || !state.itemcode || !state.price}
+                disabled={
+                  !state.username ||
+                  !state.password ||
+                  !state.companyid ||
+                  !state.companyname
+                }
                 className="btn btn-success mx-2"
                 onClick={handleSave}
               >
-                {state.itemref ? "Update" : "Save"}
+                {isupdate ? "Update" : "Save"}
               </button>
               <button
-                disabled={!state.itemref}
-                onClick={confirmDelete.bind(this, state.itemref)}
+                disabled={!isupdate}
+                onClick={confirmDelete.bind(this, state.userid)}
                 className="btn btn-danger mx-2"
               >
                 Delete
@@ -253,189 +259,223 @@ export default function UserSetupForm() {
             <div className="col-xl-1"></div>
             <div className="col-xl-1"></div>
           </div>
-
-          <div className="row mb-3">
-            <div className="col-xl-3">
-              <label className="form-label">Ref.</label>
-              <input
-                type="text"
-                readOnly
-                className="form-control"
-                value={state.itemref}
-                onChange={(e) => setState({ itemref: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="row mb-3">
-            <div className="col-xl-3">
-              <label className="form-label">Label</label>
-              <input
-                type="text"
-                className="form-control required-field"
-                value={state.label}
-                onChange={(e) => setState({ label: e.target.value })}
-              />
-            </div>
-            <div className="col-xl-3">
-              <label className="form-label">Inventory Code</label>
-              <input
-                type="text"
-                className="form-control required-field"
-                value={state.itemcode}
-                onChange={(e) => setState({ itemcode: e.target.value })}
-              />
-            </div>
-          </div>
-          <div className="row mb-3" style={{ alignItems: "flex-end" }}>
-            <div className="col-xl-2">
-              <label className="form-label">Price</label>
-              <input
-                value={state.price}
-                type="text"
-                className="form-control price-control required-field"
-                onChange={(e) =>
-                  setState({ price: e.target.value.replace(/[a-zA-Z]/g, "") })
-                }
-                onBlur={(e) => setState({ price: formatMoney(e.target.value) })}
-              />
-            </div>
-            <div className="col-xl-2">
-              <label className="form-label">Initial Counts</label>
-              <div class="input-group" style={{ borderRadius: "10px" }}>
-                <span
-                  class="input-group-text"
-                  id="basic-addon1"
-                  style={{ borderRadius: "10px 0 0 10px", background: "#fff" }}
-                  onClick={() => {
-                    const c = parseInt(state.counts || "0");
-                    if (c > 0) {
-                      setState({ counts: c - 1 });
-                    }
-                  }}
-                >
-                  <svg
-                    style={{ width: "1rem" }}
-                    aria-hidden="true"
-                    focusable="false"
-                    data-prefix="fal"
-                    data-icon="minus"
-                    role="img"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 384 512"
-                    class="svg-inline--fa fa-minus fa-w-12 fa-3x"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M376 232H8c-4.42 0-8 3.58-8 8v32c0 4.42 3.58 8 8 8h368c4.42 0 8-3.58 8-8v-32c0-4.42-3.58-8-8-8z"
-                      class=""
-                    ></path>
-                  </svg>
-                </span>
-                <input
-                  type="text"
-                  class="form-control"
-                  aria-describedby="basic-addon1"
-                  style={{ textAlign: "center" }}
-                  value={state.counts}
-                  onChange={(e) =>
-                    setState({ counts: e.target.value.replace(/[^0-9]/g, "") })
-                  }
-                />
-                <span
-                  class="input-group-text"
-                  id="basic-addon1"
-                  style={{ borderRadius: "0 10px 10px 0", background: "#fff" }}
-                  onClick={() =>
-                    setState({ counts: parseInt(state.counts || 0) + 1 })
-                  }
-                >
-                  <svg
-                    style={{ width: "1rem" }}
-                    aria-hidden="true"
-                    focusable="false"
-                    data-prefix="fal"
-                    data-icon="plus"
-                    role="img"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 384 512"
-                    class="svg-inline--fa fa-plus fa-w-12 fa-3x"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M376 232H216V72c0-4.42-3.58-8-8-8h-32c-4.42 0-8 3.58-8 8v160H8c-4.42 0-8 3.58-8 8v32c0 4.42 3.58 8 8 8h160v160c0 4.42 3.58 8 8 8h32c4.42 0 8-3.58 8-8V280h160c4.42 0 8-3.58 8-8v-32c0-4.42-3.58-8-8-8z"
-                      class=""
-                    ></path>
-                  </svg>
-                </span>
+          <div className="row">
+            <div className="col-xl-4">
+              <div className="row mb-3">
+                <div className="col-xl-12">
+                  <label className="form-label">Name</label>
+                  <input
+                    type="text"
+                    className="form-control required-field"
+                    value={state.username}
+                    onChange={(e) => setState({ username: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="row mb-3">
+                <div className="col-xl-12">
+                  <label className="form-label">Email</label>
+                  <input
+                    placeholder="john@example.com"
+                    type="text"
+                    className="form-control required-field"
+                    value={state.userid}
+                    onChange={(e) => setState({ userid: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="row mb-3">
+                <div className="col-xl-12">
+                  <label className="form-label">Password</label>
+                  <input
+                    type="password"
+                    className="form-control required-field"
+                    value={state.password}
+                    onChange={(e) => setState({ password: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="row mb-3">
+                <div className="col-xl-12">
+                  <label className="form-label">Mobile</label>
+                  <input
+                    placeholder="09-"
+                    type="text"
+                    className="form-control required-field"
+                    value={state.mobile}
+                    onChange={(e) => setState({ mobile: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
-            <div className="col-xl-2">
+            <div
+              className="col-xl-8"
+              style={{
+                justifyContent: "flex-end",
+                display: "flex",
+                paddingRight: "5rem",
+              }}
+            >
               <div
-                class="btn-group"
+                onClick={() => {
+                  const imagepicker = document.getElementById("imagepicker");
+                  imagepicker.value = "";
+                  imagepicker.click();
+                }}
+                className="center-children"
+                style={{
+                  border: "2px solid #c4c4c4",
+                  borderRadius: "50%",
+                  width: "200px",
+                  height: "200px",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
+              >
+                {state.profile ? (
+                  <img
+                    src={state.profile}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                    }}
+                  />
+                ) : (
+                  "Upload Profile"
+                )}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                id="imagepicker"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files[0]) {
+                    const fr = new FileReader();
+                    fr.readAsDataURL(files[0]);
+                    fr.addEventListener("load", () => {
+                      setState({ profile: fr.result });
+                    });
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <div className="row mb-3">
+            <div className="col-xl-4">
+              <label className="form-label">Role</label>
+              <select
+                value={state.role}
+                style={{ backgroundColor: "#fff", border: "1px solid #c4c4c4" }}
+                className="form-select form-control"
+                onChange={(e) => setState({ role: e.target.value })}
+              >
+                <option value="normaluser">Normal User</option>
+                <option value="admin">Admin</option>
+                {userRole == "superadmin" ? (
+                  <option value="superadmin">Super Admin</option>
+                ) : (
+                  ""
+                )}
+              </select>
+            </div>
+            <div className="col-xl-4">
+              <label className="form-label">Account Status</label>
+              <select
+                value={state.accountstatus}
+                style={{ backgroundColor: "#fff", border: "1px solid #c4c4c4" }}
+                className="form-select form-control"
+                onChange={(e) => setState({ accountstatus: e.target.value })}
+              >
+                <option value="active">Active</option>
+                <option value="freeze">Freeze</option>
+              </select>
+            </div>
+          </div>
+          <div className="row mb-3">
+            <div className="col-xl-3">
+              <label className="form-label">Auth Mode</label>
+              <div
+                style={{ display: "block" }}
+                className="btn-group"
                 role="group"
                 aria-label="Basic radio toggle button group"
-                onChange={(e) =>
-                  setState({ isinfinite: e.target.value == "1" ? true : false })
-                }
+                onChange={(e) => setState({ otpservice: e.target.value })}
               >
                 <input
                   type="radio"
-                  class="btn-check"
+                  className="btn-check"
                   name="btnradio"
                   id="btnradio1"
                   autocomplete="off"
-                  value="0"
-                  checked={!state.isinfinite}
+                  value="none"
+                  checked={state.otpservice == "none"}
                 />
-                <label class="btn btn-outline-primary" for="btnradio1">
-                  Finite
+                <label className="btn btn-outline-primary" for="btnradio1">
+                  None
                 </label>
 
                 <input
                   type="radio"
-                  class="btn-check"
+                  className="btn-check"
                   name="btnradio"
                   id="btnradio2"
                   autocomplete="off"
-                  value="1"
-                  checked={state.isinfinite}
+                  value="email"
+                  checked={state.otpservice == "email"}
                 />
-                <label class="btn btn-outline-primary" for="btnradio2">
-                  Infinite
+                <label className="btn btn-outline-primary" for="btnradio2">
+                  2FA
                 </label>
               </div>
             </div>
           </div>
+          <hr />
           <div className="row mb-3">
-            <div className="col-xl-2">
-              <label className="form-label">Remaining</label>
+            {state.role == "superadmin" ? (
+              <div className="col-xl-4">
+                <label className="form-label">Company ID</label>
+                <input
+                  type="text"
+                  className="form-control required-field"
+                  value={state.companyid}
+                  onChange={(e) => setState({ companyid: e.target.value })}
+                />
+              </div>
+            ) : (
+              ""
+            )}
+            <div className="col-xl-4">
+              <label className="form-label">Company Name</label>
               <input
                 type="text"
-                className="form-control"
-                readOnly
-                value={state.remaining}
+                className="form-control required-field"
+                value={state.companyname}
+                onChange={(e) => setState({ companyname: e.target.value })}
               />
             </div>
           </div>
           <div className="row mb-3">
-            <div className="col-xl-3">
-              <label className="form-label">Tag</label>
+            <div className="col-xl-4">
+              <label className="form-label">Contact Info</label>
               <input
                 type="text"
-                className="form-control"
-                value={state.tag}
-                onChange={(e) => setState({ tag: e.target.value })}
+                className="form-control "
+                value={state.contactinfo}
+                onChange={(e) => setState({ contactinfo: e.target.value })}
               />
             </div>
-          </div>
-          <div className="row mb-3">
-            <div className="col-xl-5">
-              <label className="form-label">Remark</label>
-              <textarea
-                className="form-control"
-                value={state.remark}
-                onChange={(e) => setState({ remark: e.target.value })}
-              ></textarea>
+            <div className="col-xl-4">
+              <label className="form-label">Contact Person</label>
+              <input
+                type="text"
+                className="form-control "
+                value={state.contactperson}
+                onChange={(e) => setState({ contactperson: e.target.value })}
+              />
             </div>
           </div>
         </div>
