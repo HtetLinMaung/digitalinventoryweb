@@ -41,9 +41,9 @@ export default {
       return [null, err];
     }
   },
-  delete: async (suburl, body = {}, headers = {}) => {
+  delete: async (suburl, headers = {}) => {
     try {
-      const data = await axios.delete(config.domain + suburl, body, {
+      const data = await axios.delete(config.domain + suburl, {
         headers: { ...getDefaultHeaders(), ...headers },
       });
       return [data, null];
