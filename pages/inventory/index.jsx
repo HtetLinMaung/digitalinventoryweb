@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import { formatMoney } from "../../utils/money";
 import Head from "next/head";
 import config from "../../appconfig.json";
+import { showError } from "../../utils/alert";
 
 const pageOptions = [
   { value: "10", label: "10" },
@@ -41,6 +42,47 @@ export default function Inventory() {
   const [pagination, setPagination] = useData(initPageState);
   const [state, setState] = useData(initState);
   const [rotate, setRotate] = useState("180deg");
+
+  const handleImport = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.onchange = (e) => {
+      const files = e.target.files;
+      console.log(files[0]);
+      if (files[0]) {
+        const fr = new FileReader();
+        fr.readAsDataURL(files[0]);
+        fr.addEventListener("load", () => {
+          Swal.fire({
+            showConfirmButton: false,
+            title: "Please Wait !",
+            html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>`,
+            // add html attribute if you want or remove
+            allowOutsideClick: false,
+            onBeforeOpen: () => {
+              Swal.showLoading();
+            },
+          });
+          rest
+            .post("/inventories/import", {
+              file: fr.result,
+              fileext: files[0].name.split(".")[1],
+            })
+            .then(([data, err]) => {
+              Swal.close();
+              if (err) {
+                showError(err);
+              } else {
+                fetchInventories();
+              }
+            });
+        });
+      }
+    };
+    fileInput.click();
+  };
 
   const handleExport = () => {
     const query = buildQuery({
@@ -256,7 +298,9 @@ export default function Inventory() {
         <div className="col-md-2 col-lg-4 col-xxl-7 col-xl-5"></div>
 
         <div className="import-control col-md-6 col-lg-4 col-xl-4 col-xxl-3">
-          <button className="btn">Import</button>
+          <button className="btn" onClick={handleImport}>
+            Import
+          </button>
           <button className="btn" onClick={handleExport}>
             Export
           </button>
@@ -564,6 +608,23 @@ export default function Inventory() {
       </div>
 
       <div className="row mb-4 mt-4" style={{ justifyContent: "flex-end" }}>
+        <div
+          className="col-sm-4 col-xl-2 d-flex import-control"
+          style={{ justifyContent: "flex-end" }}
+        >
+          <a
+            className="d-none"
+            id="invtemplate"
+            download
+            href="/Inventory-template.xlsx"
+          ></a>
+          <button
+            className="btn"
+            onClick={() => document.getElementById("invtemplate").click()}
+          >
+            Download Template
+          </button>
+        </div>
         <div className="col-md-4 col-xl-2">
           <div className="card p-1">
             <div
