@@ -435,7 +435,7 @@ export default function UserSetupForm() {
           </div>
           <hr />
           <div className="row mb-3">
-            {state.role == "superadmin" ? (
+            {userRole == "superadmin" ? (
               <div className="col-xl-4">
                 <label className="form-label">Company ID</label>
                 <input
