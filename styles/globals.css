@@ -189,6 +189,29 @@ main.login {
   transition: var(--transition-speed);
 }
 
+.total-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.total-container > div {
+  margin-left: 3rem;
+}
+
+.import-control {
+  display: flex;
+  justify-content: space-between;
+}
+.dropdown-toggle::after {
+  content: none;
+}
+
+@media only screen and (max-width: 1024px) {
+  .row > div {
+    margin-bottom: 1rem;
+  }
+}
+
 /* Small screens */
 @media only screen and (max-width: 600px) {
   .__navbar {
@@ -210,7 +233,29 @@ main.login {
   }
 
   main {
+    padding: 20px;
+    padding-top: 8rem;
     margin: 0;
+  }
+  .row > div {
+    padding: 0;
+  }
+  .total-container {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  .total-container > div {
+    margin: 0.5rem 0;
+  }
+  .import-control {
+    flex-direction: column;
+  }
+  .import-control .btn {
+    margin: 0.5rem 0;
+  }
+  .top__navbar-nav {
+    padding: 0 1rem;
   }
 }
 
@@ -359,11 +404,13 @@ tr:hover td {
   box-shadow: 0 0 6px 3px rgba(0, 0, 0, 0.1);
 }
 
-.form-control {
+.date-picker input {
   font-family: var(--font-family);
-  /* border: 2px solid #c4c4c4; */
-  border-radius: 10px;
-  /* background-color: #f6fafd; */
+  border-radius: 10px !important;
+  border: 0;
+  font-size: 12px;
+  box-shadow: 0px 0px 6px 3px rgb(0 0 0 / 10%);
+  height: 27.75px;
 }
 .price-control {
   text-align: right;
@@ -411,6 +458,8 @@ thead th:hover .sort-icon {
 .form-control {
   font-family: var(--font-family);
   font-size: 12px;
+  border-radius: 10px;
+  /* padding: 0.575rem 1rem; */
 }
 
 .__svg:hover {
