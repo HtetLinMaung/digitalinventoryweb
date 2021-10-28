@@ -74,10 +74,15 @@ export default function InventoryActivity() {
     const query = buildQuery({
       ...pagination,
       fromdate: pagination.fromdate
-        ? moment(pagination.fromdate).format("YYYY-MM-DD") + "T00:00"
+        ? moment(moment(pagination.fromdate).format("YYYY-MM-DD"))
+            .subtract(1, "millisecond")
+            .toISOString()
         : null,
       todate: pagination.todate
-        ? moment(pagination.todate).format("YYYY-MM-DD") + "T23:00"
+        ? moment(moment(pagination.todate).format("YYYY-MM-DD"))
+            .add(1, "day")
+            .subtract(1, "millisecond")
+            .toISOString()
         : null,
     });
     Swal.fire({
@@ -108,10 +113,15 @@ export default function InventoryActivity() {
     const query = buildQuery({
       ...pagination,
       fromdate: pagination.fromdate
-        ? moment(pagination.fromdate).format("YYYY-MM-DD") + "T00:00"
+        ? moment(moment(pagination.fromdate).format("YYYY-MM-DD"))
+            .subtract(1, "millisecond")
+            .toISOString()
         : null,
       todate: pagination.todate
-        ? moment(pagination.todate).format("YYYY-MM-DD") + "T23:00"
+        ? moment(moment(pagination.todate).format("YYYY-MM-DD"))
+            .add(1, "day")
+            .subtract(1, "millisecond")
+            .toISOString()
         : null,
     });
 
