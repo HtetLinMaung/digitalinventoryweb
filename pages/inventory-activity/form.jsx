@@ -101,6 +101,7 @@ export default function InventoryActivityForm() {
                   ...data.data.data,
                   price: formatMoney(data.data.data.price),
                   amount: formatMoney(data.data.data.amount),
+                  date: data.data.data.date + "Z",
                 });
                 setSelectdata({
                   label: data.data.data.label,

@@ -712,7 +712,7 @@ export default function InventoryActivity() {
                   </td>
                   <td>{item.vouchercode}</td>
                   <td>{item.customername}</td>
-                  <td>{moment(item.date).format("DD/MM/YYYY")}</td>
+                  <td>{moment(item.date + "Z").format("DD/MM/YYYY")}</td>
                   <td>
                     <StatusBadge invstatus={item.invstatus} />
                   </td>
