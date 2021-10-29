@@ -53,6 +53,7 @@ export default function InventoryActivity() {
   });
   const [rotate, setRotate] = useState("180deg");
   const [local, setLocal] = useState({ name: "en-US", label: "English (US)" });
+  const [userRole, setUserRole] = useState("");
 
   const handleImport = () => {
     const fileInput = document.createElement("input");
@@ -201,6 +202,7 @@ export default function InventoryActivity() {
   };
 
   useEffect(() => {
+    setUserRole(localStorage.getItem("role"));
     fetchInvActivities();
     fetchInvActivitiesTotal();
   }, [
@@ -411,13 +413,10 @@ export default function InventoryActivity() {
 
         <div className=" col-md-2 col-xl-1 col-xxl-2">
           <button
-            className="btn"
+            className="btn btn-white center-children"
             style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              width: 33,
-              height: 33,
+              width: 28,
+              height: 28,
               borderRadius: "50%",
               padding: 0,
             }}
@@ -737,6 +736,78 @@ export default function InventoryActivity() {
                   ></path>
                 </svg>
               </th>
+              {["admin", "superadmin"].includes(userRole) ? (
+                <th
+                  scope="col"
+                  onClick={() => {
+                    const sortby = "username";
+                    if (pagination.reverse == "1") {
+                      setRotate("0deg");
+                      setPagination({ sortby, reverse: "0" });
+                    } else {
+                      setRotate("180deg");
+                      setPagination({ sortby, reverse: "1" });
+                    }
+                  }}
+                >
+                  Created By
+                  <svg
+                    style={{ transform: `rotate(${rotate})` }}
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fal"
+                    data-icon="arrow-down"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 448 512"
+                    className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                      className=""
+                    ></path>
+                  </svg>
+                </th>
+              ) : (
+                ""
+              )}
+              {["superadmin"].includes(userRole) ? (
+                <th
+                  scope="col"
+                  onClick={() => {
+                    const sortby = "companyname";
+                    if (pagination.reverse == "1") {
+                      setRotate("0deg");
+                      setPagination({ sortby, reverse: "0" });
+                    } else {
+                      setRotate("180deg");
+                      setPagination({ sortby, reverse: "1" });
+                    }
+                  }}
+                >
+                  Company
+                  <svg
+                    style={{ transform: `rotate(${rotate})` }}
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fal"
+                    data-icon="arrow-down"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 448 512"
+                    className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                      className=""
+                    ></path>
+                  </svg>
+                </th>
+              ) : (
+                ""
+              )}
             </tr>
           </thead>
           <tbody>
@@ -773,6 +844,16 @@ export default function InventoryActivity() {
                   <td>
                     <StatusBadge invstatus={item.invstatus} />
                   </td>
+                  {["admin", "superadmin"].includes(userRole) ? (
+                    <td>{item.username}</td>
+                  ) : (
+                    ""
+                  )}
+                  {["superadmin"].includes(userRole) ? (
+                    <td>{item.companyname}</td>
+                  ) : (
+                    ""
+                  )}
                 </tr>
               ))
             ) : (

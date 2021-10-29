@@ -22,6 +22,7 @@
   font-size: 1.5rem;
   letter-spacing: 0.3ch;
   width: 100%;
+  border-radius: 10px;
 }
 
 .logo svg {
@@ -151,6 +152,7 @@ main.login {
   text-decoration: none;
   filter: grayscale(80%) opacity(1);
   transition: var(--transition-speed);
+  border-radius: 10px;
 }
 
 .top__nav-link {
@@ -370,7 +372,8 @@ main.login {
 }
 .btn-primary,
 .btn-primary:focus,
-.btn-primary:hover {
+.btn-primary:hover,
+.btn-primary:disabled {
   background-color: #de708d;
 }
 
@@ -467,11 +470,13 @@ thead th:hover .sort-icon {
 .void-row td,
 .void-row th {
   background-color: rgb(211, 126, 126) !important;
+  border-color: rgb(211, 126, 126) !important;
 }
 
 .warn-row td,
 .warn-row th {
   background-color: rgb(236, 171, 51) !important;
+  border-color: rgb(236, 171, 51) !important;
 }
 
 .form-control {
