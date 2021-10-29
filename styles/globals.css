@@ -5,7 +5,7 @@
 :root {
   font-size: 13px;
   --font-family: "Poppins";
-  --text-primary: black;
+  --text-primary: #352951;
   --text-secondary: #86858f;
   --bg-primary: #f8f9fe;
   --bg-secondary: #f1edff;
@@ -45,7 +45,8 @@ body {
   color: black;
   padding: 0;
   margin: 0;
-  background-color: var(--bg-primary);
+  background-color: #fef9ed;
+  color: var(--text-primary);
 }
 
 body::-webkit-scrollbar {
@@ -78,6 +79,8 @@ main.login {
   transition: width 200ms ease;
   overflow: auto;
   z-index: 10;
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
+  border-radius: 0 10px 10px 0;
 }
 
 .__navbar:hover {
@@ -331,6 +334,8 @@ main.login {
   position: fixed;
   width: 100%;
   z-index: 9;
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
+  border-radius: 0 0 10px 10px;
 }
 .avatar {
   width: 35px;
@@ -339,7 +344,7 @@ main.login {
 }
 .dropdown-menu {
   border-radius: 10px;
-  box-shadow: 0px 0px 6px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
   border: 0px;
 }
 
@@ -350,18 +355,23 @@ main.login {
 
 .card {
   border-radius: 10px;
-  box-shadow: 0px 0px 6px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
   border: 0px;
 }
 
 .btn {
   padding: 0.5rem 1.2rem;
-  box-shadow: 0px 0px 6px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
   border: 0px;
   border-radius: 15px;
   transition: all 0.2s;
   font-weight: bold;
   font-size: 0.9rem;
+}
+.btn-primary,
+.btn-primary:focus,
+.btn-primary:hover {
+  background-color: #de708d;
 }
 
 .btn:active {
@@ -405,7 +415,7 @@ tr:hover td {
 .table-responsive {
   background-color: white;
   border-radius: 10px;
-  box-shadow: 0 0 6px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.2);
 }
 
 .date-picker input {
@@ -413,7 +423,7 @@ tr:hover td {
   border-radius: 10px !important;
   border: 0;
   font-size: 12px;
-  box-shadow: 0px 0px 6px 3px rgb(0 0 0 / 10%);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
   height: 27.75px;
 }
 .price-control {
@@ -459,11 +469,20 @@ thead th:hover .sort-icon {
   background-color: rgb(211, 126, 126) !important;
 }
 
+.warn-row td,
+.warn-row th {
+  background-color: rgb(236, 171, 51) !important;
+}
+
 .form-control {
+  transition: all 0.3s;
   font-family: var(--font-family);
   font-size: 12px;
   border-radius: 10px;
   /* padding: 0.575rem 1rem; */
+}
+.form-control:focus {
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.2);
 }
 
 .__svg:hover {
@@ -487,10 +506,17 @@ thead th:hover .sort-icon {
   text-align: center;
   font-weight: bold;
   transition: all 0.3s;
-  box-shadow: 0px 0px 6px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.1);
   border: 0;
 }
 
 .otp-input:focus {
-  box-shadow: 0px 0px 6px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 6px 3px rgba(222, 112, 141, 0.2);
+}
+
+.bg-primary {
+  background-color: #de708d !important;
+}
+.btn-white {
+  background-color: white;
 }

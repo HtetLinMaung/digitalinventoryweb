@@ -37,6 +37,16 @@ const initState = {
   items: [],
 };
 
+const getRowColor = ({ remaining, minthreshold }) => {
+  if (remaining <= 0) {
+    return "void-row";
+  } else if (remaining < minthreshold) {
+    return "warn-row";
+  } else {
+    return "";
+  }
+};
+
 export default function Inventory() {
   const router = useRouter();
   const [pagination, setPagination] = useData(initPageState);
@@ -245,7 +255,7 @@ export default function Inventory() {
           <div
             className="input-group"
             style={{
-              boxShadow: "0 0 6px 3px rgba(0,0,0,0.1)",
+              boxShadow: "0 0 6px 3px rgba(222, 112, 141, 0.1)",
               borderRadius: 10,
             }}
           >
@@ -298,10 +308,10 @@ export default function Inventory() {
         <div className="col-md-2 col-lg-4 col-xxl-7 col-xl-5"></div>
 
         <div className="import-control col-md-6 col-lg-4 col-xl-4 col-xxl-3">
-          <button className="btn" onClick={handleImport}>
+          <button className="btn btn-white" onClick={handleImport}>
             Import
           </button>
-          <button className="btn" onClick={handleExport}>
+          <button className="btn btn-white" onClick={handleExport}>
             Export
           </button>
           <button
@@ -519,7 +529,7 @@ export default function Inventory() {
           <tbody>
             {state.items.length ? (
               state.items.map((item, i) => (
-                <tr key={item.itemref}>
+                <tr key={item.itemref} className={getRowColor(item)}>
                   <th scope="row">{i + 1}</th>
                   <td>{item.itemref}</td>
                   <td>{item.label}</td>
@@ -527,7 +537,7 @@ export default function Inventory() {
                   <td style={{ textAlign: "right" }}>
                     {formatMoney(item.price)}
                   </td>
-                  <td>{item.remaining}</td>
+                  <td style={{ textAlign: "right" }}>{item.remaining}</td>
                   <td>
                     {item.tag
                       ? item.tag.split(",").map((t) => (
@@ -619,7 +629,7 @@ export default function Inventory() {
             href="/Inventory.xlsx"
           ></a>
           <button
-            className="btn"
+            className="btn btn-white"
             onClick={() => document.getElementById("invtemplate").click()}
           >
             Download Template

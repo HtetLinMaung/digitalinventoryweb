@@ -20,6 +20,7 @@ const initState = {
   remaining: "0",
   tag: "",
   remark: "",
+  minthreshold: 10,
 };
 
 export default function InventoryForm() {
@@ -380,7 +381,79 @@ export default function InventoryForm() {
               </div>
             </div>
             <div className="col-xl-2">
-              <div
+              <label className="form-label">Minimum Threshold</label>
+              <div className="input-group" style={{ borderRadius: "10px" }}>
+                <span
+                  className="input-group-text"
+                  id="basic-addon1"
+                  style={{ borderRadius: "10px 0 0 10px", background: "#fff" }}
+                  onClick={() => {
+                    const c = parseInt(state.minthreshold || "0");
+                    if (c > 0) {
+                      setState({ minthreshold: c - 1 });
+                    }
+                  }}
+                >
+                  <svg
+                    style={{ width: "1rem" }}
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fal"
+                    data-icon="minus"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 384 512"
+                    className="svg-inline--fa fa-minus fa-w-12 fa-3x"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M376 232H8c-4.42 0-8 3.58-8 8v32c0 4.42 3.58 8 8 8h368c4.42 0 8-3.58 8-8v-32c0-4.42-3.58-8-8-8z"
+                      className=""
+                    ></path>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  className="form-control"
+                  aria-describedby="basic-addon1"
+                  style={{ textAlign: "center" }}
+                  value={state.minthreshold}
+                  onChange={(e) =>
+                    setState({
+                      minthreshold: e.target.value.replace(/[^0-9]/g, ""),
+                    })
+                  }
+                />
+                <span
+                  className="input-group-text"
+                  id="basic-addon1"
+                  style={{ borderRadius: "0 10px 10px 0", background: "#fff" }}
+                  onClick={() =>
+                    setState({
+                      minthreshold: parseInt(state.minthreshold || 0) + 1,
+                    })
+                  }
+                >
+                  <svg
+                    style={{ width: "1rem" }}
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fal"
+                    data-icon="plus"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 384 512"
+                    className="svg-inline--fa fa-plus fa-w-12 fa-3x"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M376 232H216V72c0-4.42-3.58-8-8-8h-32c-4.42 0-8 3.58-8 8v160H8c-4.42 0-8 3.58-8 8v32c0 4.42 3.58 8 8 8h160v160c0 4.42 3.58 8 8 8h32c4.42 0 8-3.58 8-8V280h160c4.42 0 8-3.58 8-8v-32c0-4.42-3.58-8-8-8z"
+                      className=""
+                    ></path>
+                  </svg>
+                </span>
+              </div>
+              {/* <div
                 className="btn-group"
                 role="group"
                 aria-label="Basic radio toggle button group"
@@ -413,7 +486,7 @@ export default function InventoryForm() {
                 <label className="btn btn-outline-primary" for="btnradio2">
                   Infinite
                 </label>
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="row mb-3">

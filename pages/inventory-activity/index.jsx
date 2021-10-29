@@ -277,8 +277,10 @@ export default function InventoryActivity() {
 
       <div className="row mb-4" style={{ justifyContent: "flex-end" }}>
         <div className="import-control col-md-6 col-lg-4 col-xl-3 col-xxl-3">
-          <button className="btn" onClick={handleImport}>Import</button>
-          <button className="btn" onClick={handleExport}>
+          <button className="btn btn-white" onClick={handleImport}>
+            Import
+          </button>
+          <button className="btn btn-white" onClick={handleExport}>
             Export
           </button>
           <button
@@ -298,7 +300,7 @@ export default function InventoryActivity() {
           <div
             className="input-group"
             style={{
-              boxShadow: "0 0 6px 3px rgba(0,0,0,0.1)",
+              boxShadow: "0 0 6px 3px rgba(222, 112, 141, 0.1)",
               borderRadius: 10,
             }}
           >
@@ -799,7 +801,7 @@ export default function InventoryActivity() {
             href="/Inventory-In-Out.xlsx"
           ></a>
           <button
-            className="btn"
+            className="btn btn-white"
             onClick={() => document.getElementById("invatvtemplate").click()}
           >
             Download Template

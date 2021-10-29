@@ -188,7 +188,7 @@ export default function UserSetup() {
           <div
             className="input-group"
             style={{
-              boxShadow: "0 0 6px 3px rgba(0,0,0,0.1)",
+              boxShadow: "0 0 6px 3px rgba(222, 112, 141, 0.1)",
               borderRadius: 10,
             }}
           >
