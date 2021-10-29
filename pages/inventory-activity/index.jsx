@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Select from "react-select";
 import { useData } from "../../hooks/custom-hooks";
 import rest from "../../utils/rest";
+import iam from "../../utils/iam-rest";
 import { buildQuery } from "../../utils/url-builder";
 import Swal from "sweetalert2";
 import { formatMoney } from "../../utils/money";
@@ -35,6 +36,8 @@ const initPageState = {
   fromdate: moment().subtract(1, "months"),
   todate: new Date(),
   invstatus: "all",
+  companyid: "all",
+  userid: "all",
 };
 
 const initState = {
@@ -54,6 +57,22 @@ export default function InventoryActivity() {
   const [rotate, setRotate] = useState("180deg");
   const [local, setLocal] = useState({ name: "en-US", label: "English (US)" });
   const [userRole, setUserRole] = useState("");
+  const [hidefilter, setHidefilter] = useState(true);
+  const [userOptions, setUserOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
+
+  const toggleFilter = () => {
+    setHidefilter(!hidefilter);
+  };
+
+  const fetchCompanyAndUser = async () => {
+    const [data, err] = await iam.get("/auth/company-and-user");
+    if (err) {
+      showError(err);
+    } else {
+      setCompanyOptions(data.data.data);
+    }
+  };
 
   const handleImport = () => {
     const fileInput = document.createElement("input");
@@ -203,6 +222,10 @@ export default function InventoryActivity() {
 
   useEffect(() => {
     setUserRole(localStorage.getItem("role"));
+    fetchCompanyAndUser();
+  }, []);
+
+  useEffect(() => {
     fetchInvActivities();
     fetchInvActivitiesTotal();
   }, [
@@ -277,26 +300,6 @@ export default function InventoryActivity() {
         </div>
       </div>
 
-      <div className="row mb-4" style={{ justifyContent: "flex-end" }}>
-        <div className="import-control col-md-6 col-lg-4 col-xl-3 col-xxl-3">
-          <button className="btn btn-white" onClick={handleImport}>
-            Import
-          </button>
-          <button className="btn btn-white" onClick={handleExport}>
-            Export
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              localStorage.setItem("activityref", "");
-              router.push("/inventory-activity/form");
-            }}
-          >
-            New In/Out
-          </button>
-        </div>
-      </div>
-
       <div className="row mb-4">
         <div className="col-md-4 col-xxl-2 col-xl-3">
           <div
@@ -357,63 +360,38 @@ export default function InventoryActivity() {
             </span>
           </div>
         </div>
-        <div className="col-md-4 col-xl-2">
-          <select
-            style={{ backgroundColor: "#fff" }}
-            value={pagination.invstatus}
-            onChange={(e) =>
-              setPagination({ invstatus: e.target.value, page: "1" })
-            }
-            className="form-select form-control card"
-          >
-            <option value="in">In</option>
-            <option value="out">Out</option>
-            <option value="reject">Reject</option>
-            <option value="all">Status</option>
-          </select>
-        </div>
-        <div className="col-md-4 col-xl-2">
-          <select
-            style={{ backgroundColor: "#fff" }}
-            className="form-select form-control card"
-            value={pagination.voidstatus}
-            onChange={(e) =>
-              setPagination({ voidstatus: e.target.value, page: "1" })
-            }
-          >
-            <option value="2">All</option>
-            <option value="1">Active</option>
-            <option value="0">Void</option>
-          </select>
-        </div>
 
-        <div className="col-md-4 col-xxl-2 col-xl-2">
-          <DatePicker
-            className="date-picker"
-            id="datePicker-1"
-            placeholder="From"
-            value={pagination.fromdate}
-            onChange={(value) => setPagination({ fromdate: value, page: "1" })}
-            formatStyle="medium"
-            locale={local.name}
-          />
-        </div>
-
-        <div className="col-md-4 col-xxl-2 col-xl-2">
-          <DatePicker
-            className="date-picker"
-            placeholder="To"
-            id="datePicker-1"
-            value={pagination.todate}
-            onChange={(value) => setPagination({ todate: value, page: "1" })}
-            formatStyle="medium"
-            locale={local.name}
-          />
-        </div>
-
-        <div className=" col-md-2 col-xl-1 col-xxl-2">
+        <div className=" col-md-2 col-lg-4 col-xl-6 col-xxl-7 d-flex">
           <button
-            className="btn btn-white center-children"
+            className="btn btn-white center-children mx-2"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              padding: 0,
+            }}
+            onClick={toggleFilter}
+          >
+            <svg
+              style={{ width: "1rem" }}
+              aria-hidden="true"
+              focusable="false"
+              data-prefix="far"
+              data-icon="filter"
+              role="img"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 512 512"
+              className="svg-inline--fa fa-filter fa-w-16 fa-3x __svg"
+            >
+              <path
+                fill="currentColor"
+                d="M463.952 0H48.057C5.419 0-16.094 51.731 14.116 81.941L176 243.882V416c0 15.108 7.113 29.335 19.2 40l64 47.066c31.273 21.855 76.8 1.538 76.8-38.4V243.882L497.893 81.941C528.042 51.792 506.675 0 463.952 0zM288 224v240l-64-48V224L48 48h416L288 224z"
+                class=""
+              ></path>
+            </svg>
+          </button>
+          <button
+            className="btn btn-white center-children mx-2"
             style={{
               width: 28,
               height: 28,
@@ -441,7 +419,139 @@ export default function InventoryActivity() {
             </svg>
           </button>
         </div>
+        <div className="import-control col-md-6 col-lg-4 col-xl-3 col-xxl-3">
+          <button className="btn btn-white" onClick={handleImport}>
+            Import
+          </button>
+          <button className="btn btn-white" onClick={handleExport}>
+            Export
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              localStorage.setItem("activityref", "");
+              router.push("/inventory-activity/form");
+            }}
+          >
+            New In/Out
+          </button>
+        </div>
       </div>
+
+      {!hidefilter ? (
+        <div className="row mb-4">
+          <div className="col-md-4 col-xl-2">
+            <select
+              style={{ backgroundColor: "#fff" }}
+              value={pagination.invstatus}
+              onChange={(e) =>
+                setPagination({ invstatus: e.target.value, page: "1" })
+              }
+              className="form-select form-control card"
+            >
+              <option value="in">In</option>
+              <option value="out">Out</option>
+              <option value="reject">Reject</option>
+              <option value="all">Status</option>
+            </select>
+          </div>
+          <div className="col-md-4 col-xl-2">
+            <select
+              style={{ backgroundColor: "#fff" }}
+              className="form-select form-control card"
+              value={pagination.voidstatus}
+              onChange={(e) =>
+                setPagination({ voidstatus: e.target.value, page: "1" })
+              }
+            >
+              <option value="2">All</option>
+              <option value="1">Active</option>
+              <option value="0">Void</option>
+            </select>
+          </div>
+          <div className="col-md-4 col-xxl-2 col-xl-2">
+            <DatePicker
+              className="date-picker"
+              id="datePicker-1"
+              placeholder="From"
+              value={pagination.fromdate}
+              onChange={(value) =>
+                setPagination({ fromdate: value, page: "1" })
+              }
+              formatStyle="medium"
+              locale={local.name}
+            />
+          </div>
+          <div className="col-md-4 col-xxl-2 col-xl-2">
+            <DatePicker
+              className="date-picker"
+              placeholder="To"
+              id="datePicker-1"
+              value={pagination.todate}
+              onChange={(value) => setPagination({ todate: value, page: "1" })}
+              formatStyle="medium"
+              locale={local.name}
+            />
+          </div>
+          {userRole == "superadmin" ? (
+            <div className="col-md-4 col-xl-2">
+              <select
+                style={{ backgroundColor: "#fff" }}
+                value={pagination.companyid}
+                onChange={(e) => {
+                  const company = companyOptions.find(
+                    (com) => com.companyid == e.target.value
+                  );
+
+                  const pageObj = {
+                    companyid: e.target.value,
+                    page: "1",
+                  };
+                  if (company && company.users.length) {
+                    pageObj.userid = company.users[0].userid;
+                  }
+                  setPagination(pageObj);
+                }}
+                className="form-select form-control card"
+              >
+                <option value="all">Company</option>
+                {companyOptions.map((option) => (
+                  <option key={option.companyid} value={option.companyid}>
+                    {option.companyname}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            ""
+          )}
+          {pagination.companyid != "all" &&
+          ["superadmin", "admin"].includes(userRole) ? (
+            <div className="col-md-4 col-xl-2">
+              <select
+                style={{ backgroundColor: "#fff" }}
+                value={pagination.userid}
+                onChange={(e) =>
+                  setPagination({ userid: e.target.value, page: "1" })
+                }
+                className="form-select form-control card"
+              >
+                {companyOptions
+                  .find((com) => com.companyid == pagination.companyid)
+                  .users.map((option) => (
+                    <option key={option.userid} value={option.userid}>
+                      {option.username}
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ) : (
+            ""
+          )}
+        </div>
+      ) : (
+        ""
+      )}
 
       <div className="table-responsive">
         <table className="__table table">
