@@ -616,7 +616,7 @@ export default function Inventory() {
             className="d-none"
             id="invtemplate"
             download
-            href="/Inventory-template.xlsx"
+            href="/Inventory.xlsx"
           ></a>
           <button
             className="btn"

@@ -101,12 +101,19 @@ export default function Login() {
             name="password"
             value={state.password}
             onChange={(e) => setState({ password: e.target.value })}
+            onKeyPress={(e) => {
+              console.log(e);
+              if (e.key == "Enter") {
+                loginHandler();
+              }
+            }}
             style={{ fontSize: "16px", marginTop: ".5rem" }}
             type="password"
             className="form-control"
           />
         </div>
         <button
+          disabled={!state.userid || !state.password}
           onClick={loginHandler}
           className="btn btn-primary"
           style={{ fontSize: "14px", marginBottom: "2rem" }}

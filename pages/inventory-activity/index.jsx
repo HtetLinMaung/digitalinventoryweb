@@ -54,6 +54,47 @@ export default function InventoryActivity() {
   const [rotate, setRotate] = useState("180deg");
   const [local, setLocal] = useState({ name: "en-US", label: "English (US)" });
 
+  const handleImport = () => {
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.onchange = (e) => {
+      const files = e.target.files;
+      if (files[0]) {
+        const fr = new FileReader();
+        fr.readAsDataURL(files[0]);
+        fr.addEventListener("load", () => {
+          Swal.fire({
+            showConfirmButton: false,
+            title: "Please Wait !",
+            html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>`,
+            // add html attribute if you want or remove
+            allowOutsideClick: false,
+            onBeforeOpen: () => {
+              Swal.showLoading();
+            },
+          });
+          rest
+            .post("/inventory-activities/import", {
+              file: fr.result,
+              fileext: files[0].name.split(".")[1],
+            })
+            .then(([data, err]) => {
+              Swal.close();
+              if (err) {
+                showError(err);
+              } else {
+                fetchInvActivities();
+                fetchInvActivitiesTotal();
+              }
+            });
+        });
+      }
+    };
+    fileInput.click();
+  };
+
   const handleExport = () => {
     const query = buildQuery({
       ...pagination,
@@ -236,7 +277,7 @@ export default function InventoryActivity() {
 
       <div className="row mb-4" style={{ justifyContent: "flex-end" }}>
         <div className="import-control col-md-6 col-lg-4 col-xl-3 col-xxl-3">
-          <button className="btn">Import</button>
+          <button className="btn" onClick={handleImport}>Import</button>
           <button className="btn" onClick={handleExport}>
             Export
           </button>
@@ -274,6 +315,7 @@ export default function InventoryActivity() {
               onKeyPress={(e) => {
                 if (e.key == "Enter") {
                   fetchInvActivities();
+                  fetchInvActivitiesTotal();
                 }
               }}
             />
@@ -287,7 +329,10 @@ export default function InventoryActivity() {
               }}
             >
               <svg
-                onClick={fetchInvActivities}
+                onClick={() => {
+                  fetchInvActivities();
+                  fetchInvActivitiesTotal();
+                }}
                 style={{ width: "1rem" }}
                 aria-hidden="true"
                 focusable="false"
@@ -743,6 +788,23 @@ export default function InventoryActivity() {
       </div>
 
       <div className="row mb-4 mt-4" style={{ justifyContent: "flex-end" }}>
+        <div
+          className="col-sm-4 col-xl-2 d-flex import-control"
+          style={{ justifyContent: "flex-end" }}
+        >
+          <a
+            className="d-none"
+            id="invatvtemplate"
+            download
+            href="/Inventory-In-Out.xlsx"
+          ></a>
+          <button
+            className="btn"
+            onClick={() => document.getElementById("invatvtemplate").click()}
+          >
+            Download Template
+          </button>
+        </div>
         <div className="col-md-4 col-xl-2">
           <div className="card p-1">
             <div
