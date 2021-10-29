@@ -1,6 +1,6 @@
 {
-    "domain": "http://localhost/api/v1",
-    "iam": "http://localhost/iam",
+    "domain": "http://150.95.82.125/api/v1",
+    "iam": "http://150.95.82.125/iam",
     "version": "Digital Inventory (1.0.1)",
     "production": "150.95.82.125"
 }
