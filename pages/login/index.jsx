@@ -53,11 +53,11 @@ export default function Login() {
 
   return (
     <div
+      className="center-children"
       style={{
         height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        backgroundSize: "cover",
+        backgroundImage: "url('/login-wallpaper.jpg')",
       }}
     >
       <Head>
