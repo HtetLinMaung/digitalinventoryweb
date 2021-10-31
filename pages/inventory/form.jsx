@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useData } from "../../hooks/custom-hooks";
 import { formatMoney } from "../../utils/money";
 import rest from "../../utils/rest";
+import iam from "../../utils/iam-rest";
 import Swal from "sweetalert2";
 import { useRouter } from "next/router";
 import { showError } from "../../utils/alert";
 import Head from "next/head";
 import config from "../../appconfig.json";
+import { buildQuery } from "../../utils/url-builder";
 
 const initState = {
   itemref: "",
@@ -21,12 +23,57 @@ const initState = {
   tag: "",
   remark: "",
   minthreshold: 10,
+  shopid: "",
+  shopname: "",
+  companyid: "",
+  companyname: "",
 };
 
 export default function InventoryForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [state, setState] = useData(initState);
+  const [shopOptions, setShopOptions] = useState([]);
+  const [userRole, setUserRole] = useState("normaluser");
+  const [companyOptions, setCompanyOptions] = useState([]);
+
+  const fetchCompanyAndUser = async () => {
+    const [data, err] = await iam.get("/auth/company-and-user");
+    if (err) {
+      showError(err);
+    } else {
+      setCompanyOptions(data.data.data);
+    }
+  };
+
+  const fetchShops = async () => {
+    const query = buildQuery({
+      page: "1",
+      perpage: "999999",
+      search: "",
+      sortby: "createddate",
+      reverse: "1",
+    });
+    Swal.fire({
+      showConfirmButton: false,
+      title: "Please Wait !",
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>`,
+      // add html attribute if you want or remove
+      allowOutsideClick: false,
+      onBeforeOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const [data, err] = await rest.get(`/shops?${query}`);
+    if (err) {
+      showError(err);
+    } else {
+      Swal.close();
+      setShopOptions(data.data.data);
+    }
+  };
 
   const getRemaining = async (ref) => {
     const [d, e] = await rest.get(`/inventory-activities/remainings/${ref}`);
@@ -38,6 +85,11 @@ export default function InventoryForm() {
 
   useEffect(() => {
     const itemref = localStorage.getItem("itemref");
+    setUserRole(localStorage.getItem("role"));
+    if (localStorage.getItem("role") == "superadmin") {
+      fetchCompanyAndUser();
+    }
+    fetchShops();
     if (itemref) {
       Swal.fire({
         showConfirmButton: false,
@@ -276,6 +328,72 @@ export default function InventoryForm() {
                 onChange={(e) => setState({ itemref: e.target.value })}
               />
             </div>
+            {["superadmin"].includes(userRole) ? (
+              <div className="col-xl-3">
+                <label className="form-label">Company</label>
+                <select
+                  value={state.companyid}
+                  style={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #c4c4c4",
+                  }}
+                  className="form-select form-control"
+                  onChange={(e) => {
+                    let companyname = "";
+                    const cm = companyOptions.find(
+                      (opt) => opt.shopid == e.target.value
+                    );
+                    if (cm) {
+                      companyname = cm.companyname;
+                    }
+                    setState({ companyid: e.target.value, companyname });
+                  }}
+                >
+                  <option value="">N/A</option>
+
+                  {companyOptions.map((option) => (
+                    <option key={option.companyid} value={option.companyid}>
+                      {option.companyname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              ""
+            )}
+            {["admin", "superadmin"].includes(userRole) ? (
+              <div className="col-xl-3">
+                <label className="form-label">Shop</label>
+                <select
+                  value={state.shopid}
+                  style={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #c4c4c4",
+                  }}
+                  className="form-select form-control"
+                  onChange={(e) => {
+                    let shopname = "";
+                    const sm = shopOptions.find(
+                      (opt) => opt.shopid == e.target.value
+                    );
+                    if (sm) {
+                      shopname = sm.shopname;
+                    }
+                    setState({ shopid: e.target.value, shopname });
+                  }}
+                >
+                  <option value="">N/A</option>
+
+                  {shopOptions.map((option) => (
+                    <option key={option.shopid} value={option.shopid}>
+                      {option.shopname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
           <div className="row mb-3">
             <div className="col-xl-3">

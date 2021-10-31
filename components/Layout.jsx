@@ -10,6 +10,7 @@ const initState = {
   username: "",
   profile: "",
   role: "",
+  shopname: "",
 };
 
 export default function Layout({ children }) {
@@ -21,7 +22,14 @@ export default function Layout({ children }) {
     const profile = localStorage.getItem("profile");
     const companyname = localStorage.getItem("companyname");
     const role = localStorage.getItem("role");
-    setState({ username, profile, companyname, role });
+    const shopname = localStorage.getItem("shopname");
+    setState({
+      username,
+      profile,
+      companyname,
+      role,
+      shopname: shopname ? `(${shopname})` : "",
+    });
     const token = localStorage.getItem("token");
     if (!routes.includes(router.route) && !token) {
       router.push("/login");
@@ -307,7 +315,7 @@ export default function Layout({ children }) {
               </a>
             </li> */}
             <li className="top__nav-item" style={{ fontSize: "1.3rem" }}>
-              {state.companyname}
+              {state.companyname} {state.shopname}
             </li>
 
             <li className="top__nav-item">

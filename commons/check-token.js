@@ -26,6 +26,10 @@ const checkToken = async () => {
     localStorage.setItem("username", data.data.data.username);
     localStorage.setItem("companyname", data.data.data.companyname);
     localStorage.setItem("role", data.data.data.role);
+    localStorage.setItem(
+      "shopname",
+      data.data.data.shopname ? data.data.data.shopname : ""
+    );
   }
 };
 

@@ -7,6 +7,8 @@ import { showError } from "../../utils/alert";
 import iam from "../../utils/iam-rest";
 import Head from "next/head";
 import config from "../../appconfig.json";
+import rest from "../../utils/rest";
+import { buildQuery } from "../../utils/url-builder";
 
 const initState = {
   userid: "",
@@ -29,10 +31,64 @@ export default function UserSetupForm() {
   const [state, setState] = useData(initState);
   const [userRole, setUserRole] = useState("admin");
   const [isupdate, setIsupdate] = useState("");
+  const [shopid, setShopid] = useState("");
+  const [shopOptions, setShopOptions] = useState([]);
+
+  const mapShop = async () => {
+    const sm = shopOptions.find((opt) => opt.shopid == shopid);
+    if (sm) {
+      const body = {
+        shopid,
+        shopname: sm.shopname,
+        userref: state.userid,
+      };
+      const [data, err] = await rest.post("/shops/maps", body);
+      if (err) {
+        showError(err);
+      }
+    }
+  };
+
+  const fetchShops = async () => {
+    const query = buildQuery({
+      page: "1",
+      perpage: "999999",
+      search: "",
+      sortby: "createddate",
+      reverse: "1",
+    });
+    Swal.fire({
+      showConfirmButton: false,
+      title: "Please Wait !",
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>`,
+      // add html attribute if you want or remove
+      allowOutsideClick: false,
+      onBeforeOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const [data, err] = await rest.get(`/shops?${query}`);
+    if (err) {
+      showError(err);
+    } else {
+      Swal.close();
+      setShopOptions(data.data.data);
+    }
+  };
+
+  const getShopMap = async (userid) => {
+    const [data, err] = await rest.get(`/shops/maps/${userid}`);
+    if (!err) {
+      setShopid(data.data.data.shopid);
+    }
+  };
 
   useEffect(() => {
     const role = localStorage.getItem("role");
     setUserRole(role);
+    fetchShops();
     if (role == "superadmin") {
       setState({ password: "User@123" });
     } else if (role == "admin") {
@@ -69,6 +125,7 @@ export default function UserSetupForm() {
             delete data.data.data["updatedAt"];
           }
           setState(data.data.data);
+          getShopMap(data.data.data.userid);
         }
       });
     }
@@ -101,7 +158,7 @@ export default function UserSetupForm() {
         Swal.showLoading();
       },
     });
-
+    mapShop();
     const body = { ...state };
     let promise;
     const userid = localStorage.getItem("userid");
@@ -395,6 +452,32 @@ export default function UserSetupForm() {
               </select>
             </div>
           </div>
+          {state.role == "normaluser" ? (
+            <div className="row mb-3">
+              <div className="col-xl-4">
+                <label className="form-label">Shop</label>
+                <select
+                  value={shopid}
+                  style={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #c4c4c4",
+                  }}
+                  className="form-select form-control"
+                  onChange={(e) => setShopid(e.target.value)}
+                >
+                  <option value="">N/A</option>
+
+                  {shopOptions.map((option) => (
+                    <option key={option.shopid} value={option.shopid}>
+                      {option.shopname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ) : (
+            ""
+          )}
           <div className="row mb-3">
             <div className="col-xl-3">
               <label className="form-label">Auth Mode</label>

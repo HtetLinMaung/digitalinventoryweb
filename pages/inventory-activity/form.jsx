@@ -24,6 +24,10 @@ const initState = {
   vouchercode: "",
   customername: "",
   remark: "",
+  shopid: "",
+  shopname: "",
+  companyid: "",
+  companyname: "",
 };
 
 export default function InventoryActivityForm() {
