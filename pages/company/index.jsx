@@ -37,14 +37,14 @@ const initState = {
   items: [],
 };
 
-export default function Shop() {
+export default function Company() {
   const router = useRouter();
   const [pagination, setPagination] = useData(initPageState);
   const [state, setState] = useData(initState);
   const [rotate, setRotate] = useState("180deg");
   const [userRole, setUserRole] = useState("normaluser");
 
-  const fetchShops = async () => {
+  const fetchCompanies = async () => {
     const query = buildQuery(pagination);
 
     Swal.fire({
@@ -59,7 +59,7 @@ export default function Shop() {
         Swal.showLoading();
       },
     });
-    const [data, err] = await rest.get(`/shops?${query}`);
+    const [data, err] = await rest.get(`/companies?${query}`);
     Swal.close();
     if (err) {
       showError(err);
@@ -81,7 +81,7 @@ export default function Shop() {
     setPagination({ page: page + i });
   };
 
-  const confirmDelete = (shopid) => {
+  const confirmDelete = (companyid) => {
     const swalWithBootstrapButtons = Swal.mixin({
       customClass: {
         confirmButton: "btn btn-success mx-2",
@@ -114,7 +114,7 @@ export default function Shop() {
               Swal.showLoading();
             },
           });
-          rest.delete(`/shops/${shopid}`).then(([data, err]) => {
+          rest.delete(`/companies/${companyid}`).then(([data, err]) => {
             Swal.close();
             if (err) {
               showError(err);
@@ -122,7 +122,7 @@ export default function Shop() {
               swalWithBootstrapButtons
                 .fire("Deleted!", "Your data has been deleted.", "success")
                 .then(() => {
-                  fetchShops();
+                  fetchCompanies();
                 });
             }
           });
@@ -141,7 +141,7 @@ export default function Shop() {
 
   useEffect(() => {
     setUserRole(localStorage.getItem("role"));
-    fetchShops();
+    fetchCompanies();
   }, [
     pagination.page,
     pagination.perpage,
@@ -164,7 +164,7 @@ export default function Shop() {
       >
         <ol className="breadcrumb">
           <li className="breadcrumb-item active" aria-current="page">
-            Shop Setup
+            Company Setup
           </li>
         </ol>
       </nav>
@@ -199,7 +199,7 @@ export default function Shop() {
               onChange={(e) => setPagination({ search: e.target.value })}
               onKeyPress={(e) => {
                 if (e.key == "Enter") {
-                  fetchShops();
+                  fetchCompanies();
                 }
               }}
             />
@@ -213,7 +213,7 @@ export default function Shop() {
               }}
             >
               <svg
-                onClick={fetchShops}
+                onClick={fetchCompanies}
                 style={{ width: "1rem" }}
                 aria-hidden="true"
                 focusable="false"
@@ -244,11 +244,11 @@ export default function Shop() {
           <button
             className="btn btn-primary"
             onClick={() => {
-              localStorage.setItem("shopid", "");
-              router.push("/shop/form");
+              localStorage.setItem("companyid", "");
+              router.push("/company/form");
             }}
           >
-            New Shop
+            New Company
           </button>
         </div>
       </div>
@@ -261,7 +261,7 @@ export default function Shop() {
               <th
                 scope="col"
                 onClick={() => {
-                  const sortby = "shopid";
+                  const sortby = "companyid";
                   if (pagination.reverse == "1") {
                     setRotate("0deg");
                     setPagination({ sortby, reverse: "0" });
@@ -293,7 +293,7 @@ export default function Shop() {
               <th
                 scope="col"
                 onClick={() => {
-                  const sortby = "shopname";
+                  const sortby = "companyname";
                   if (pagination.reverse == "1") {
                     setRotate("0deg");
                     setPagination({ sortby, reverse: "0" });
@@ -322,98 +322,16 @@ export default function Shop() {
                   ></path>
                 </svg>
               </th>
-              {["superadmin"].includes(userRole) ? (
-                <th
-                  scope="col"
-                  onClick={() => {
-                    const sortby = "username";
-                    if (pagination.reverse == "1") {
-                      setRotate("0deg");
-                      setPagination({ sortby, reverse: "0" });
-                    } else {
-                      setRotate("180deg");
-                      setPagination({ sortby, reverse: "1" });
-                    }
-                  }}
-                >
-                  Created By
-                  <svg
-                    style={{ transform: `rotate(${rotate})` }}
-                    aria-hidden="true"
-                    focusable="false"
-                    data-prefix="fal"
-                    data-icon="arrow-down"
-                    role="img"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 448 512"
-                    className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
-                      className=""
-                    ></path>
-                  </svg>
-                </th>
-              ) : (
-                ""
-              )}
-              {["superadmin"].includes(userRole) ? (
-                <th
-                  scope="col"
-                  onClick={() => {
-                    const sortby = "companyname";
-                    if (pagination.reverse == "1") {
-                      setRotate("0deg");
-                      setPagination({ sortby, reverse: "0" });
-                    } else {
-                      setRotate("180deg");
-                      setPagination({ sortby, reverse: "1" });
-                    }
-                  }}
-                >
-                  Company
-                  <svg
-                    style={{ transform: `rotate(${rotate})` }}
-                    aria-hidden="true"
-                    focusable="false"
-                    data-prefix="fal"
-                    data-icon="arrow-down"
-                    role="img"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 448 512"
-                    className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
-                      className=""
-                    ></path>
-                  </svg>
-                </th>
-              ) : (
-                ""
-              )}
               <th scope="col"></th>
             </tr>
           </thead>
           <tbody>
             {state.items.length ? (
               state.items.map((item, i) => (
-                <tr key={item.shopid}>
+                <tr key={item.companyid}>
                   <th scope="row">{i + 1}</th>
-                  <td>{item.shopid}</td>
-                  <td>{item.shopname}</td>
-                  {["superadmin"].includes(userRole) ? (
-                    <td>{item.username}</td>
-                  ) : (
-                    ""
-                  )}
-                  {["superadmin"].includes(userRole) ? (
-                    <td>{item.companyname}</td>
-                  ) : (
-                    ""
-                  )}
+                  <td>{item.companyid}</td>
+                  <td>{item.companyname}</td>
                   <td>
                     <div
                       style={{
@@ -424,8 +342,8 @@ export default function Shop() {
                     >
                       <svg
                         onClick={() => {
-                          localStorage.setItem("shopid", item.shopid);
-                          router.push("/shop/form");
+                          localStorage.setItem("companyid", item.companyid);
+                          router.push("/company/form");
                         }}
                         style={{ width: "1rem" }}
                         aria-hidden="true"
@@ -454,7 +372,7 @@ export default function Shop() {
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 448 512"
                         className="svg-inline--fa fa-trash fa-w-14 fa-3x"
-                        onClick={confirmDelete.bind(this, item.shopid)}
+                        onClick={confirmDelete.bind(this, item.companyid)}
                       >
                         <path
                           style={{ color: "grey" }}
@@ -470,7 +388,7 @@ export default function Shop() {
             ) : (
               <tr>
                 <td
-                  colSpan={userRole == "superadmin" ? "6" : "4"}
+                  colSpan="4"
                   style={{ textAlign: "center", fontWeight: "bold" }}
                 >
                   No Data
