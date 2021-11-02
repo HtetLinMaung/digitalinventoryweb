@@ -175,7 +175,7 @@ export default function CompanyForm() {
       >
         <ol className="breadcrumb">
           <li className="breadcrumb-item">
-            <Link href="/shop">
+            <Link href="/company">
               <a>Company Setup</a>
             </Link>
           </li>
