@@ -29,6 +29,7 @@ const initPageState = {
   search: "",
   sortby: "createddate",
   reverse: "1",
+  companyid: "",
 };
 
 const initState = {

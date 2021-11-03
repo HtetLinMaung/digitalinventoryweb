@@ -37,23 +37,15 @@ export default function InventoryForm() {
   const [userRole, setUserRole] = useState("normaluser");
   const [companyOptions, setCompanyOptions] = useState([]);
 
-  const fetchCompanyAndUser = async () => {
-    const [data, err] = await iam.get("/auth/company-and-user");
-    if (err) {
-      showError(err);
-    } else {
-      setCompanyOptions(data.data.data);
-    }
-  };
-
-  const fetchShops = async () => {
+  const fetchCompanies = async () => {
     const query = buildQuery({
       page: "1",
-      perpage: "999999",
+      perpage: "9999999",
       search: "",
       sortby: "createddate",
       reverse: "1",
     });
+
     Swal.fire({
       showConfirmButton: false,
       title: "Please Wait !",
@@ -66,12 +58,54 @@ export default function InventoryForm() {
         Swal.showLoading();
       },
     });
-    const [data, err] = await rest.get(`/shops?${query}`);
+    const [data, err] = await rest.get(`/companies?${query}`);
+    Swal.close();
     if (err) {
       showError(err);
     } else {
-      Swal.close();
-      setShopOptions(data.data.data);
+      setCompanyOptions(data.data.data);
+      if (!localStorage.getItem("itemref") && data.data.data.length) {
+        const com = data.data.data[0];
+        setState({ companyid: com.companyid, companyname: com.companyname });
+      }
+    }
+  };
+
+  const fetchShops = async () => {
+    const role = localStorage.getItem("role");
+    if (role != "normaluser") {
+      if (role == "superadmin" && !state.companyid) return;
+      const query = buildQuery({
+        page: "1",
+        perpage: "999999",
+        search: "",
+        sortby: "createddate",
+        reverse: "1",
+        companyid: role == "superadmin" ? state.companyid : "",
+      });
+      Swal.fire({
+        showConfirmButton: false,
+        title: "Please Wait !",
+        html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>`,
+        // add html attribute if you want or remove
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      const [data, err] = await rest.get(`/shops?${query}`);
+      if (err) {
+        showError(err);
+      } else {
+        Swal.close();
+        setShopOptions(data.data.data);
+        if (data.data.data.length && !localStorage.getItem("itemref")) {
+          const shop = data.data.data[0];
+          setState({ shopid: shop.shopid, shopname: shop.shopname });
+        }
+      }
     }
   };
 
@@ -84,12 +118,19 @@ export default function InventoryForm() {
   };
 
   useEffect(() => {
+    // const companyid = localStorage.getItem("companyid");
+    // const companyname = localStorage.getItem("companyname");
+    // setState({
+    //   companyid,
+    //   companyname,
+    // });
     const itemref = localStorage.getItem("itemref");
-    setUserRole(localStorage.getItem("role"));
+    const role = localStorage.getItem("role");
+    setUserRole(role);
     if (localStorage.getItem("role") == "superadmin") {
-      fetchCompanyAndUser();
+      fetchCompanies();
     }
-    fetchShops();
+
     if (itemref) {
       Swal.fire({
         showConfirmButton: false,
@@ -120,6 +161,10 @@ export default function InventoryForm() {
     }
   }, []);
 
+  useEffect(() => {
+    fetchShops();
+  }, [state.companyid]);
+
   // useEffect(() => {
   //   const remaining = 0;
   //   if (state.itemref) {
@@ -133,6 +178,7 @@ export default function InventoryForm() {
   const handleNew = () => {
     localStorage.setItem("itemref", "");
     setState(initState);
+    setShopOptions([]);
   };
 
   const handleSave = async () => {
@@ -341,7 +387,7 @@ export default function InventoryForm() {
                   onChange={(e) => {
                     let companyname = "";
                     const cm = companyOptions.find(
-                      (opt) => opt.shopid == e.target.value
+                      (opt) => opt.companyid == e.target.value
                     );
                     if (cm) {
                       companyname = cm.companyname;
@@ -349,8 +395,6 @@ export default function InventoryForm() {
                     setState({ companyid: e.target.value, companyname });
                   }}
                 >
-                  <option value="">N/A</option>
-
                   {companyOptions.map((option) => (
                     <option key={option.companyid} value={option.companyid}>
                       {option.companyname}
@@ -382,8 +426,6 @@ export default function InventoryForm() {
                     setState({ shopid: e.target.value, shopname });
                   }}
                 >
-                  <option value="">N/A</option>
-
                   {shopOptions.map((option) => (
                     <option key={option.shopid} value={option.shopid}>
                       {option.shopname}

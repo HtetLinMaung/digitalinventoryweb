@@ -7,19 +7,59 @@ import { useRouter } from "next/router";
 import { showError } from "../../utils/alert";
 import Head from "next/head";
 import config from "../../appconfig.json";
+import { buildQuery } from "../../utils/url-builder";
 
 const initState = {
   shopid: "",
   shopname: "",
+  companyid: "",
+  companyname: "",
 };
 
 export default function ShopForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [state, setState] = useData(initState);
+  const [companyOptions, setCompanyOptions] = useState([]);
+  const [userRole, setUserRole] = useState("normaluser");
+
+  const fetchCompanies = async () => {
+    const query = buildQuery({
+      page: "1",
+      perpage: "9999999",
+      search: "",
+      sortby: "createddate",
+      reverse: "1",
+    });
+
+    Swal.fire({
+      showConfirmButton: false,
+      title: "Please Wait !",
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>`,
+      // add html attribute if you want or remove
+      allowOutsideClick: false,
+      onBeforeOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const [data, err] = await rest.get(`/companies?${query}`);
+    Swal.close();
+    if (err) {
+      showError(err);
+    } else {
+      setCompanyOptions(data.data.data);
+    }
+  };
 
   useEffect(() => {
+    const role = localStorage.getItem("role");
     const shopid = localStorage.getItem("shopid");
+    setUserRole(role);
+    if (role == "superadmin") {
+      fetchCompanies();
+    }
     if (shopid) {
       Swal.fire({
         showConfirmButton: false,
@@ -214,7 +254,6 @@ export default function ShopForm() {
             <div className="col-xl-1"></div>
             <div className="col-xl-1"></div>
           </div>
-
           <div className="row mb-3">
             <div className="col-xl-4">
               <label className="form-label">ID</label>
@@ -227,6 +266,39 @@ export default function ShopForm() {
               />
             </div>
           </div>
+          {userRole == "superadmin" ? (
+            <div className="row mb-3">
+              <div className="col-xl-4">
+                <label className="form-label">Company</label>
+                <select
+                  value={state.companyid}
+                  style={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #c4c4c4",
+                  }}
+                  className="form-select form-control"
+                  onChange={(e) => {
+                    const company = companyOptions.find(
+                      (c) => c.companyid == e.target.value
+                    );
+                    let companyname = "";
+                    if (company) {
+                      companyname = company.companyname;
+                    }
+                    setState({ companyid: e.target.value, companyname });
+                  }}
+                >
+                  {companyOptions.map((c) => (
+                    <option key={c.companyid} value={c.companyid}>
+                      {c.companyname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          ) : (
+            ""
+          )}
           <div className="row mb-3">
             <div className="col-xl-4">
               <label className="form-label">Name</label>

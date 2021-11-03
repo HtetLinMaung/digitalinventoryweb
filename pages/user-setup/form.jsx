@@ -33,6 +33,48 @@ export default function UserSetupForm() {
   const [isupdate, setIsupdate] = useState("");
   const [shopid, setShopid] = useState("");
   const [shopOptions, setShopOptions] = useState([]);
+  const [companyOptions, setCompanyOptions] = useState([]);
+
+  const updateCompanyName = async () => {
+    if (state.companyid) {
+      const [data, err] = await rest.put(`/companies/${state.companyid}`, {
+        companyname: state.companyname,
+      });
+      if (err) {
+        showError(err);
+      }
+    }
+  };
+
+  const fetchCompanies = async () => {
+    const query = buildQuery({
+      page: "1",
+      perpage: "9999999",
+      search: "",
+      sortby: "createddate",
+      reverse: "1",
+    });
+
+    Swal.fire({
+      showConfirmButton: false,
+      title: "Please Wait !",
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>`,
+      // add html attribute if you want or remove
+      allowOutsideClick: false,
+      onBeforeOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const [data, err] = await rest.get(`/companies?${query}`);
+    Swal.close();
+    if (err) {
+      showError(err);
+    } else {
+      setCompanyOptions(data.data.data);
+    }
+  };
 
   const mapShop = async () => {
     const sm = shopOptions.find((opt) => opt.shopid == shopid);
@@ -41,6 +83,8 @@ export default function UserSetupForm() {
         shopid,
         shopname: sm.shopname,
         userref: state.userid,
+        companyid: state.companyid,
+        companyname: state.companyname,
       };
       const [data, err] = await rest.post("/shops/maps", body);
       if (err) {
@@ -56,6 +100,7 @@ export default function UserSetupForm() {
       search: "",
       sortby: "createddate",
       reverse: "1",
+      companyid: "",
     });
     Swal.fire({
       showConfirmButton: false,
@@ -89,7 +134,9 @@ export default function UserSetupForm() {
     const role = localStorage.getItem("role");
     setUserRole(role);
     fetchShops();
+
     if (role == "superadmin") {
+      fetchCompanies();
       setState({ password: "User@123" });
     } else if (role == "admin") {
       setState({
@@ -159,6 +206,7 @@ export default function UserSetupForm() {
       },
     });
     mapShop();
+    updateCompanyName();
     const body = { ...state };
     let promise;
     const userid = localStorage.getItem("userid");
@@ -465,8 +513,6 @@ export default function UserSetupForm() {
                   className="form-select form-control"
                   onChange={(e) => setShopid(e.target.value)}
                 >
-                  <option value="">N/A</option>
-
                   {shopOptions.map((option) => (
                     <option key={option.shopid} value={option.shopid}>
                       {option.shopname}
@@ -520,26 +566,43 @@ export default function UserSetupForm() {
           <div className="row mb-3">
             {userRole == "superadmin" ? (
               <div className="col-xl-4">
-                <label className="form-label">Company ID</label>
+                <label className="form-label">Company</label>
+                <select
+                  value={state.companyid}
+                  style={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #c4c4c4",
+                  }}
+                  className="form-select form-control"
+                  onChange={(e) => {
+                    const company = companyOptions.find(
+                      (c) => c.companyid == e.target.value
+                    );
+                    let companyname = "";
+                    if (company) {
+                      companyname = company.companyname;
+                    }
+                    setState({ companyid: e.target.value, companyname });
+                  }}
+                >
+                  {companyOptions.map((c) => (
+                    <option key={c.companyid} value={c.companyid}>
+                      {c.companyname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="col-xl-4">
+                <label className="form-label">Company Name</label>
                 <input
                   type="text"
                   className="form-control required-field"
-                  value={state.companyid}
-                  onChange={(e) => setState({ companyid: e.target.value })}
+                  value={state.companyname}
+                  onChange={(e) => setState({ companyname: e.target.value })}
                 />
               </div>
-            ) : (
-              ""
             )}
-            <div className="col-xl-4">
-              <label className="form-label">Company Name</label>
-              <input
-                type="text"
-                className="form-control required-field"
-                value={state.companyname}
-                onChange={(e) => setState({ companyname: e.target.value })}
-              />
-            </div>
           </div>
           <div className="row mb-3">
             <div className="col-xl-4">

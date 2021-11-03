@@ -9,6 +9,7 @@ import { formatMoney } from "../../utils/money";
 import Head from "next/head";
 import config from "../../appconfig.json";
 import { showError } from "../../utils/alert";
+import { reactIf } from "../../utils/ui";
 
 const pageOptions = [
   { value: "10", label: "10" },
@@ -525,7 +526,8 @@ export default function Inventory() {
                   ></path>
                 </svg>
               </th>
-              {["admin", "superadmin"].includes(userRole) ? (
+              {reactIf(
+                ["admin", "superadmin"].includes(userRole),
                 <th
                   scope="col"
                   onClick={() => {
@@ -558,9 +560,8 @@ export default function Inventory() {
                     ></path>
                   </svg>
                 </th>
-              ) : (
-                ""
               )}
+
               {["superadmin"].includes(userRole) ? (
                 <th
                   scope="col"
@@ -596,6 +597,41 @@ export default function Inventory() {
                 </th>
               ) : (
                 ""
+              )}
+              {reactIf(
+                ["admin", "superadmin"].includes(userRole),
+                <th
+                  scope="col"
+                  onClick={() => {
+                    const sortby = "shopname";
+                    if (pagination.reverse == "1") {
+                      setRotate("0deg");
+                      setPagination({ sortby, reverse: "0" });
+                    } else {
+                      setRotate("180deg");
+                      setPagination({ sortby, reverse: "1" });
+                    }
+                  }}
+                >
+                  Shop
+                  <svg
+                    style={{ transform: `rotate(${rotate})` }}
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fal"
+                    data-icon="arrow-down"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 448 512"
+                    className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                      className=""
+                    ></path>
+                  </svg>
+                </th>
               )}
               <th scope="col"></th>
             </tr>
@@ -633,6 +669,10 @@ export default function Inventory() {
                     <td>{item.companyname}</td>
                   ) : (
                     ""
+                  )}
+                  {reactIf(
+                    ["admin", "superadmin"].includes(userRole),
+                    <td>{item.shopname}</td>
                   )}
                   <td>
                     <div
