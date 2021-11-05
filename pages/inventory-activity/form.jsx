@@ -62,12 +62,7 @@ export default function InventoryActivityForm() {
   useEffect(() => {
     rest.get("/inventories/inventory-combo").then(([combodata, comboerr]) => {
       if (comboerr) {
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: err.message,
-          footer: '<a href="">Why do I have this issue?</a>',
-        });
+        showError(comboerr);
       } else {
         setInventories(
           combodata.data.data.map((inv) => ({ ...inv, value: inv.itemref }))
@@ -372,15 +367,22 @@ export default function InventoryActivityForm() {
 
           <div className="row mb-3" style={{ alignItems: "flex-end" }}>
             <div className="col-xl-3">
-              <label className="form-label">Ref.</label>
-              <input
-                type="text"
-                readOnly
-                className="form-control"
-                value={state.activityref}
-                onChange={(e) => setState({ activityref: e.target.value })}
+              <label className="form-label">Date</label>
+              <DatePicker
+                id="datePicker-1"
+                value={state.date}
+                onChange={(value) => setState({ date: value })}
+                formatStyle="medium"
+                locale={local.name}
+                className="date-picker"
+                style={{
+                  boxShadow: "none",
+                  border: "1px solid #c4c4c4",
+                  borderRadius: "10px",
+                }}
               />
             </div>
+
             <div className="col-xl-3">
               <div
                 className="btn-group"
@@ -430,24 +432,87 @@ export default function InventoryActivityForm() {
             </div>
           </div>
 
+          {state.invstatus == "out" ? (
+            <div className="row mb-3">
+              <div className="col-xl-3">
+                <label className="form-label">Voucher Code</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={state.vouchercode}
+                  onChange={(e) => setState({ vouchercode: e.target.value })}
+                />
+              </div>
+              <div className="col-xl-3">
+                <label className="form-label">Customer Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={state.customername}
+                  onChange={(e) => setState({ customername: e.target.value })}
+                />
+              </div>
+            </div>
+          ) : (
+            ""
+          )}
+
           <div className="row mb-3">
-            <div className="col-xl-3">
-              <label className="form-label">Date</label>
-              <DatePicker
-                id="datePicker-1"
-                value={state.date}
-                onChange={(value) => setState({ date: value })}
-                formatStyle="medium"
-                locale={local.name}
+            <div className="col-xl-2">
+              <label className="form-label">Ref.</label>
+              <input
+                type="text"
+                readOnly
+                className="form-control"
+                value={state.activityref}
+                onChange={(e) => setState({ activityref: e.target.value })}
               />
             </div>
-          </div>
-
-          <div className="row mb-3">
             <div className="col-xl-3">
-              <label className="form-label">Inventory</label>
-
+              <label className="form-label">
+                Inventory (
+                <span
+                  className=" mx-1"
+                  style={{ fontSize: 12, fontWeight: "bold" }}
+                >
+                  {remaining}
+                </span>
+                )
+              </label>
               <Select
+                styles={{
+                  input: (styles) => ({
+                    ...styles,
+                    height: "28.75px",
+                    minHeight: "28.75px",
+                    margin: 0,
+                    padding: 0,
+                    fontSize: 12,
+                  }),
+                  control: (styles) => ({
+                    ...styles,
+                    height: "28.75px",
+                    minHeight: "28.75px",
+                    borderRadius: "10px",
+                  }),
+                  valueContainer: (styles) => ({
+                    ...styles,
+                    height: "28.75px",
+                    minHeight: "28.75px",
+                  }),
+                  container: (styles) => ({
+                    ...styles,
+                    height: "28.75px",
+                    minHeight: "28.75px",
+                    fontSize: 12,
+                  }),
+
+                  indicatorsContainer: (styles) => ({
+                    ...styles,
+                    height: "28.75px",
+                    minHeight: "28.75px",
+                  }),
+                }}
                 isDisabled={state.activityref}
                 value={selectdata}
                 options={inventories}
@@ -461,27 +526,6 @@ export default function InventoryActivityForm() {
                     price: formatMoney(inv.price),
                   });
                 }}
-              />
-            </div>
-            <div className="col-xl-2">
-              <label className="form-label">Remaining</label>
-              <input
-                type="text"
-                className="form-control"
-                readOnly
-                value={remaining}
-              />
-            </div>
-          </div>
-          <div className="row mb-3" style={{ alignItems: "flex-end" }}>
-            <div className="col-xl-3">
-              <label className="form-label">Inventory Code</label>
-              <input
-                readOnly
-                type="text"
-                className="form-control"
-                value={state.itemcode}
-                onChange={(e) => setState({ itemcode: e.target.value })}
               />
             </div>
             <div className="col-xl-2">
@@ -567,7 +611,7 @@ export default function InventoryActivityForm() {
                 </span>
               </div>
             </div>
-            <div className="col-xl-3">
+            <div className="col-xl-2">
               <label className="form-label">Amount</label>
               <input
                 value={state.amount}
@@ -576,31 +620,29 @@ export default function InventoryActivityForm() {
                 className="form-control price-control"
               />
             </div>
+            {/* <div className="col-xl-2">
+              <label className="form-label">Remaining</label>
+              <input
+                type="text"
+                className="form-control"
+                readOnly
+                value={remaining}
+              />
+            </div> */}
           </div>
-          {state.invstatus == "out" ? (
-            <div className="row mb-3">
-              <div className="col-xl-3">
-                <label className="form-label">Voucher Code</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={state.vouchercode}
-                  onChange={(e) => setState({ vouchercode: e.target.value })}
-                />
-              </div>
-              <div className="col-xl-3">
-                <label className="form-label">Customer Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={state.customername}
-                  onChange={(e) => setState({ customername: e.target.value })}
-                />
-              </div>
+          {/* <div className="row mb-3" style={{ alignItems: "flex-end" }}>
+            <div className="col-xl-3">
+              <label className="form-label">Inventory Code</label>
+              <input
+                readOnly
+                type="text"
+                className="form-control"
+                value={state.itemcode}
+                onChange={(e) => setState({ itemcode: e.target.value })}
+              />
             </div>
-          ) : (
-            ""
-          )}
+          </div> */}
+
           <div className="row mb-3">
             <div className="col-xl-5">
               <label className="form-label">Remark</label>
