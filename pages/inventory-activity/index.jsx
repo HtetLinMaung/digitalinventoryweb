@@ -12,6 +12,7 @@ import moment from "moment";
 import { DatePicker } from "react-rainbow-components";
 import Head from "next/head";
 import config from "../../appconfig.json";
+import { reactIf } from "../../utils/ui";
 
 const pageOptions = [
   { value: "10", label: "10" },
@@ -60,6 +61,81 @@ export default function InventoryActivity() {
   const [hidefilter, setHidefilter] = useState(true);
   const [userOptions, setUserOptions] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
+  const [shopOptions, setShopOptions] = useState([]);
+
+  const getColSpan = () => {
+    switch (userRole) {
+      case "normaluser":
+        return "9";
+      case "admin":
+        return "10";
+      case "superadmin":
+        return "11";
+    }
+  };
+  const fetchCompanies = async () => {
+    const query = buildQuery({
+      page: "1",
+      perpage: "9999999",
+      search: "",
+      sortby: "createddate",
+      reverse: "1",
+    });
+
+    Swal.fire({
+      showConfirmButton: false,
+      title: "Please Wait !",
+      html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>`,
+      // add html attribute if you want or remove
+      allowOutsideClick: false,
+      onBeforeOpen: () => {
+        Swal.showLoading();
+      },
+    });
+    const [data, err] = await rest.get(`/companies?${query}`);
+    Swal.close();
+    if (err) {
+      showError(err);
+    } else {
+      setCompanyOptions(data.data.data);
+    }
+  };
+
+  const fetchShops = async () => {
+    const role = localStorage.getItem("role");
+    if (role != "normaluser") {
+      if (role == "superadmin" && !state.companyid) return;
+      const query = buildQuery({
+        page: "1",
+        perpage: "999999",
+        search: "",
+        sortby: "createddate",
+        reverse: "1",
+        companyid: role == "superadmin" ? state.companyid : "",
+      });
+      Swal.fire({
+        showConfirmButton: false,
+        title: "Please Wait !",
+        html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>`,
+        // add html attribute if you want or remove
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      const [data, err] = await rest.get(`/shops?${query}`);
+      if (err) {
+        showError(err);
+      } else {
+        Swal.close();
+        setShopOptions(data.data.data);
+      }
+    }
+  };
 
   const toggleFilter = () => {
     setHidefilter(!hidefilter);
@@ -221,9 +297,15 @@ export default function InventoryActivity() {
   };
 
   useEffect(() => {
+    if (localStorage.getItem("role") == "superadmin") {
+      fetchCompanies();
+    }
     setUserRole(localStorage.getItem("role"));
-    fetchCompanyAndUser();
   }, []);
+
+  useEffect(() => {
+    fetchShops();
+  }, [pagination.companyid]);
 
   useEffect(() => {
     fetchInvActivities();
@@ -496,8 +578,11 @@ export default function InventoryActivity() {
           {userRole == "superadmin" ? (
             <div className="col-md-4 col-xl-2">
               <select
-                style={{ backgroundColor: "#fff" }}
                 value={pagination.companyid}
+                style={{
+                  backgroundColor: "#fff",
+                }}
+                className="form-select form-control card"
                 onChange={(e) => {
                   const company = companyOptions.find(
                     (com) => com.companyid == e.target.value
@@ -507,12 +592,11 @@ export default function InventoryActivity() {
                     companyid: e.target.value,
                     page: "1",
                   };
-                  if (company && company.users.length) {
-                    pageObj.userid = company.users[0].userid;
-                  }
+                  // if (company && company.users.length) {
+                  //   pageObj.userid = company.users[0].userid;
+                  // }
                   setPagination(pageObj);
                 }}
-                className="form-select form-control card"
               >
                 <option value="all">Company</option>
                 {companyOptions.map((option) => (
@@ -529,6 +613,41 @@ export default function InventoryActivity() {
           ["superadmin", "admin"].includes(userRole) ? (
             <div className="col-md-4 col-xl-2">
               <select
+                value={state.shopid}
+                style={{
+                  backgroundColor: "#fff",
+                }}
+                className="form-select form-control card"
+                onChange={(e) => {
+                  let shopname = "";
+                  const sm = shopOptions.find(
+                    (opt) => opt.shopid == e.target.value
+                  );
+                  const pageObj = {
+                    shopid: e.target.value,
+                    page: "1",
+                  };
+                  // if (sm && sm.users.length) {
+                  //   pageObj.userid = company.users[0].userid;
+                  // }
+                  setPagination(pageObj);
+                }}
+              >
+                <option value="all">Shop</option>
+                {shopOptions.map((option) => (
+                  <option key={option.shopid} value={option.shopid}>
+                    {option.shopname}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            ""
+          )}
+          {pagination.companyid != "all" &&
+          ["superadmin", "admin"].includes(userRole) ? (
+            <div className="col-md-4 col-xl-2">
+              {/* <select
                 style={{ backgroundColor: "#fff" }}
                 value={pagination.userid}
                 onChange={(e) =>
@@ -543,7 +662,7 @@ export default function InventoryActivity() {
                       {option.username}
                     </option>
                   ))}
-              </select>
+              </select> */}
             </div>
           ) : (
             ""
@@ -918,6 +1037,41 @@ export default function InventoryActivity() {
               ) : (
                 ""
               )}
+              {reactIf(
+                ["admin", "superadmin"].includes(userRole),
+                <th
+                  scope="col"
+                  onClick={() => {
+                    const sortby = "shopname";
+                    if (pagination.reverse == "1") {
+                      setRotate("0deg");
+                      setPagination({ sortby, reverse: "0" });
+                    } else {
+                      setRotate("180deg");
+                      setPagination({ sortby, reverse: "1" });
+                    }
+                  }}
+                >
+                  Shop
+                  <svg
+                    style={{ transform: `rotate(${rotate})` }}
+                    aria-hidden="true"
+                    focusable="false"
+                    data-prefix="fal"
+                    data-icon="arrow-down"
+                    role="img"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 448 512"
+                    className="svg-inline--fa fa-arrow-down fa-w-14 fa-3x sort-icon"
+                  >
+                    <path
+                      fill="currentColor"
+                      d="M443.5 248.5l-7.1-7.1c-4.7-4.7-12.3-4.7-17 0L241 419.9V44c0-6.6-5.4-12-12-12h-10c-6.6 0-12 5.4-12 12v375.9L28.5 241.4c-4.7-4.7-12.3-4.7-17 0l-7.1 7.1c-4.7 4.7-4.7 12.3 0 17l211 211.1c4.7 4.7 12.3 4.7 17 0l211-211.1c4.8-4.8 4.8-12.3.1-17z"
+                      className=""
+                    ></path>
+                  </svg>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -964,12 +1118,16 @@ export default function InventoryActivity() {
                   ) : (
                     ""
                   )}
+                  {reactIf(
+                    ["admin", "superadmin"].includes(userRole),
+                    <td>{item.shopname}</td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="10"
+                  colSpan={getColSpan()}
                   style={{ textAlign: "center", fontWeight: "bold" }}
                 >
                   No Data
