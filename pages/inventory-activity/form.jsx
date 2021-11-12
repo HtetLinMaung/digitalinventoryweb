@@ -266,6 +266,10 @@ export default function InventoryActivityForm() {
           vouchercode: state.vouchercode,
           customername: state.customername,
           remark: state.remark,
+          shopid: state.shopid,
+          shopname: state.shopname,
+          companyid: state.companyid,
+          companyname: state.companyname,
         };
       }),
     };
@@ -505,6 +509,38 @@ export default function InventoryActivityForm() {
                 }}
               />
             </div>
+
+            {["superadmin"].includes(userRole) ? (
+              <div className="col-xl-3">
+                <label className="form-label">Company</label>
+                <select
+                  value={state.companyid}
+                  style={{
+                    backgroundColor: "#fff",
+                    border: "1px solid #c4c4c4",
+                  }}
+                  className="form-select form-control"
+                  onChange={(e) => {
+                    let companyname = "";
+                    const cm = companyOptions.find(
+                      (opt) => opt.companyid == e.target.value
+                    );
+                    if (cm) {
+                      companyname = cm.companyname;
+                    }
+                    setState({ companyid: e.target.value, companyname });
+                  }}
+                >
+                  {companyOptions.map((option) => (
+                    <option key={option.companyid} value={option.companyid}>
+                      {option.companyname}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              ""
+            )}
 
             {reactIf(
               ["admin", "superadmin"].includes(userRole),
