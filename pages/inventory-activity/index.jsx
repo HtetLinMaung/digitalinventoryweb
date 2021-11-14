@@ -63,6 +63,34 @@ export default function InventoryActivity() {
   const [companyOptions, setCompanyOptions] = useState([]);
   const [shopOptions, setShopOptions] = useState([]);
 
+  const fetchUsers = async () => {
+    const role = localStorage.getItem("role");
+    if (role != "normaluser") {
+      if (role == "superadmin" && !pagination.shopid) return;
+      Swal.fire({
+        showConfirmButton: false,
+        title: "Please Wait !",
+        html: `<div style="width: 5rem; height: 5rem;" className="spinner-border m-3 text-info" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>`,
+        // add html attribute if you want or remove
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+          Swal.showLoading();
+        },
+      });
+      const [data, err] = await rest.get(
+        `/shops/maps/users/${pagination.shopid}`
+      );
+      if (err) {
+        showError(err);
+      } else {
+        Swal.close();
+        setUserOptions(data.data.data);
+      }
+    }
+  };
+
   const getColSpan = () => {
     switch (userRole) {
       case "normaluser":
@@ -104,16 +132,17 @@ export default function InventoryActivity() {
   };
 
   const fetchShops = async () => {
+    console.log("fetchshops func run");
     const role = localStorage.getItem("role");
     if (role != "normaluser") {
-      if (role == "superadmin" && !state.companyid) return;
+      if (role == "superadmin" && !pagination.companyid) return;
       const query = buildQuery({
         page: "1",
         perpage: "999999",
         search: "",
         sortby: "createddate",
         reverse: "1",
-        companyid: role == "superadmin" ? state.companyid : "",
+        companyid: role == "superadmin" ? pagination.companyid : "",
       });
       Swal.fire({
         showConfirmButton: false,
@@ -139,15 +168,6 @@ export default function InventoryActivity() {
 
   const toggleFilter = () => {
     setHidefilter(!hidefilter);
-  };
-
-  const fetchCompanyAndUser = async () => {
-    const [data, err] = await iam.get("/auth/company-and-user");
-    if (err) {
-      showError(err);
-    } else {
-      setCompanyOptions(data.data.data);
-    }
   };
 
   const handleImport = () => {
@@ -304,8 +324,13 @@ export default function InventoryActivity() {
   }, []);
 
   useEffect(() => {
+    console.log("fetch shops");
     fetchShops();
   }, [pagination.companyid]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [pagination.shopid]);
 
   useEffect(() => {
     fetchInvActivities();
@@ -529,7 +554,7 @@ export default function InventoryActivity() {
               onChange={(e) =>
                 setPagination({ invstatus: e.target.value, page: "1" })
               }
-              className="form-select form-control card"
+              className="form-select form-control card mb-3"
             >
               <option value="in">In</option>
               <option value="out">Out</option>
@@ -609,8 +634,7 @@ export default function InventoryActivity() {
           ) : (
             ""
           )}
-          {pagination.companyid != "all" &&
-          ["superadmin", "admin"].includes(userRole) ? (
+          {["superadmin", "admin"].includes(userRole) ? (
             <div className="col-md-4 col-xl-2">
               <select
                 value={state.shopid}
@@ -644,10 +668,9 @@ export default function InventoryActivity() {
           ) : (
             ""
           )}
-          {pagination.companyid != "all" &&
-          ["superadmin", "admin"].includes(userRole) ? (
+          {["superadmin", "admin"].includes(userRole) ? (
             <div className="col-md-4 col-xl-2">
-              {/* <select
+              <select
                 style={{ backgroundColor: "#fff" }}
                 value={pagination.userid}
                 onChange={(e) =>
@@ -655,14 +678,13 @@ export default function InventoryActivity() {
                 }
                 className="form-select form-control card"
               >
-                {companyOptions
-                  .find((com) => com.companyid == pagination.companyid)
-                  .users.map((option) => (
-                    <option key={option.userid} value={option.userid}>
-                      {option.username}
-                    </option>
-                  ))}
-              </select> */}
+                <option value="all">User</option>
+                {userOptions.map((option) => (
+                  <option key={option.userid} value={option.userid}>
+                    {option.username}
+                  </option>
+                ))}
+              </select>
             </div>
           ) : (
             ""
