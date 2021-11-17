@@ -190,7 +190,7 @@ export default function Layout({ children }) {
                       role="img"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 640 512"
-                      class="svg-inline--fa fa-store-alt fa-w-20 fa-3x"
+                      className="svg-inline--fa fa-store-alt fa-w-20 fa-3x"
                     >
                       <path
                         fill="currentColor"
@@ -218,7 +218,7 @@ export default function Layout({ children }) {
                       role="img"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 512 512"
-                      class="svg-inline--fa fa-briefcase fa-w-16 fa-3x"
+                      className="svg-inline--fa fa-briefcase fa-w-16 fa-3x"
                     >
                       <path
                         fill="currentColor"
