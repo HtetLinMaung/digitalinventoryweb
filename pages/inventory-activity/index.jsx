@@ -39,6 +39,7 @@ const initPageState = {
   invstatus: "all",
   companyid: "all",
   userid: "all",
+  shopid: "all",
 };
 
 const initState = {
@@ -344,6 +345,9 @@ export default function InventoryActivity() {
     pagination.fromdate,
     pagination.todate,
     pagination.invstatus,
+    pagination.companyid,
+    pagination.userid,
+    pagination.shopid,
   ]);
 
   const StatusBadge = ({ invstatus }) => {
