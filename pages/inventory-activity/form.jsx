@@ -586,7 +586,7 @@ export default function InventoryActivityForm() {
                   className="btn-check"
                   name="invstatus"
                   id="btnradio1"
-                  autocomplete="off"
+                  autoComplete="off"
                   value="in"
                   checked={state.invstatus == "in"}
                 />
@@ -599,7 +599,7 @@ export default function InventoryActivityForm() {
                   className="btn-check"
                   name="invstatus"
                   id="btnradio2"
-                  autocomplete="off"
+                  autoComplete="off"
                   value="out"
                   checked={state.invstatus == "out"}
                 />
@@ -612,7 +612,7 @@ export default function InventoryActivityForm() {
                   className="btn-check"
                   name="invstatus"
                   id="btnradio3"
-                  autocomplete="off"
+                  autoComplete="off"
                   value="reject"
                   checked={state.invstatus == "reject"}
                 />
@@ -891,7 +891,7 @@ export default function InventoryActivityForm() {
                       role="img"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 384 512"
-                      class="svg-inline--fa fa-minus fa-w-12 fa-3x"
+                      className="svg-inline--fa fa-minus fa-w-12 fa-3x"
                     >
                       <path
                         fill="currentColor"

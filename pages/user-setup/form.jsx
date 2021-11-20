@@ -539,7 +539,7 @@ export default function UserSetupForm() {
                   className="btn-check"
                   name="btnradio"
                   id="btnradio1"
-                  autocomplete="off"
+                  autoComplete="off"
                   value="none"
                   checked={state.otpservice == "none"}
                 />
@@ -552,7 +552,7 @@ export default function UserSetupForm() {
                   className="btn-check"
                   name="btnradio"
                   id="btnradio2"
-                  autocomplete="off"
+                  autoComplete="off"
                   value="email"
                   checked={state.otpservice == "email"}
                 />
